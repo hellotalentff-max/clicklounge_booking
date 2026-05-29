@@ -223,7 +223,7 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
         <div>
           <div class="pay-name">GCash</div>
           <div class="pay-detail">0919 662 8224</div>
-          <div class="pay-sub">ClickLounge Studio</div>
+          <div class="pay-sub">Ma*****e M.</div>
         </div>
       </div>
       <div class="pay-method">
@@ -247,10 +247,29 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
       ⚠ <strong>Your slot is held for 4 hours only.</strong> Non-payment within 4 hours will automatically release this slot to other clients. Send your proof of payment via Facebook Messenger immediately after paying.
     </div>
 
+    <!-- Terms & Conditions -->
+    <div style="background:#fff;border:1.5px solid rgba(47,79,79,0.08);border-radius:12px;padding:18px 20px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <span style="font-size:20px;">📋</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#2f4f4f;">Studio Terms & Conditions</div>
+          <div style="font-size:11px;color:rgba(47,79,79,0.5);">Please read before submitting your booking</div>
+        </div>
+      </div>
+      <a href="Terms_and_conditions.pdf" target="_blank" style="display:block;text-align:center;background:rgba(47,79,79,0.05);border:1.5px solid rgba(47,79,79,0.12);border-radius:8px;padding:12px;text-decoration:none;color:#2f4f4f;font-size:13px;font-weight:600;margin-bottom:14px;transition:all 0.15s;" onmouseover="this.style.background='rgba(81,137,125,0.1)';this.style.borderColor='rgba(81,137,125,0.3)'" onmouseout="this.style.background='rgba(47,79,79,0.05)';this.style.borderColor='rgba(47,79,79,0.12)'">
+        📄 View Terms & Conditions
+      </a>
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:10px 12px;background:rgba(215,144,104,0.04);border:1.5px solid rgba(215,144,104,0.12);border-radius:8px;" id="tc-label">
+        <input type="checkbox" id="tc-agree" onchange="onTCChange()" style="accent-color:#d79068;width:18px;height:18px;margin-top:2px;flex-shrink:0;">
+        <span style="font-size:12px;color:#2f4f4f;line-height:1.6;">I have read and agree to the <strong>Studio Terms & Conditions</strong>, including booking policies, cancellation rules, studio conduct, photo delivery, and copyright usage.</span>
+      </label>
+      <div id="tc-err" style="display:none;font-size:11px;color:#c0544a;margin-top:6px;padding-left:28px;">Please read and agree to the Terms & Conditions to continue.</div>
+    </div>
+
     <div id="submit-err" class="err-msg" style="margin-bottom:12px;"></div>
     <div class="brow">
       <button class="btn-back" onclick="goSc(3)">← Back</button>
-      <button class="btn-main gold" id="btn-confirm" onclick="submitBooking()">Confirm Booking</button>
+      <button class="btn-main gold" id="btn-confirm" onclick="submitBooking()" disabled style="opacity:0.5;">Submit Booking Request</button>
     </div>
   </div>
 
@@ -279,7 +298,7 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
       <div class="pay-title">Send ₱300 Downpayment To</div>
       <div class="pay-method">
         <div class="pay-icon">💚</div>
-        <div><div class="pay-name">GCash</div><div class="pay-detail">0919 662 8224</div><div class="pay-sub">ClickLounge Studio</div></div>
+        <div><div class="pay-name">GCash</div><div class="pay-detail">0919 662 8224</div><div class="pay-sub">Ma*****e M.</div></div>
       </div>
       <div class="pay-method">
         <div class="pay-icon">🏦</div>
@@ -541,7 +560,25 @@ function validateInfo() {
 }
 
 // Submit booking
+function onTCChange(){
+  var checked = document.getElementById('tc-agree').checked;
+  var btn = document.getElementById('btn-confirm');
+  var label = document.getElementById('tc-label');
+  var err = document.getElementById('tc-err');
+  if(btn){ btn.disabled = !checked; btn.style.opacity = checked ? '1' : '0.5'; }
+  if(label){ label.style.borderColor = checked ? 'rgba(61,140,110,0.4)' : 'rgba(215,144,104,0.12)'; label.style.background = checked ? 'rgba(61,140,110,0.04)' : 'rgba(215,144,104,0.04)'; }
+  if(err) err.style.display = 'none';
+}
+
 function submitBooking() {
+  // Check T&C agreement
+  var tcBox = document.getElementById('tc-agree');
+  if(!tcBox || !tcBox.checked){
+    var tcErr = document.getElementById('tc-err');
+    if(tcErr) tcErr.style.display = '';
+    return;
+  }
+
   var btn   = document.getElementById('btn-confirm');
   var errEl = document.getElementById('submit-err');
   btn.disabled = true;
