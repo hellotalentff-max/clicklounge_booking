@@ -55,6 +55,17 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
 .pkg-link:hover{background:var(--teal-dk);}
 .pkg-link-note{font-size:11px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:4px;}
 
+.pkg-card{background:var(--light);border:1.5px solid var(--light2);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.15s;position:relative;}
+.pkg-card:hover{border-color:var(--teal);background:var(--white);transform:translateY(-1px);box-shadow:0 3px 12px rgba(47,79,79,0.08);}
+.pkg-card:active{transform:scale(0.98);}
+.pkg-card.gold{border-color:rgba(215,144,104,0.15);} .pkg-card.gold:hover{border-color:var(--gold);}
+.pkg-card.grad{border-color:rgba(91,99,217,0.15);} .pkg-card.grad:hover{border-color:#5b63d9;}
+.pkg-name{font-size:13px;font-weight:600;color:var(--slate);margin-bottom:3px;}
+.pkg-desc{font-size:10px;color:var(--muted);margin-bottom:8px;}
+.pkg-book{font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;}
+.pkg-card.gold .pkg-book{color:var(--gold);}
+.pkg-card.grad .pkg-book{color:#5b63d9;}
+
 /* Slots */
 .slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px;}
 .slot-btn{border:1.5px solid var(--light2);border-radius:8px;padding:11px 6px;cursor:pointer;transition:all 0.15s;background:var(--light);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;color:var(--text);text-align:center;line-height:1.4;}
@@ -142,21 +153,96 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
   <div class="screen active" id="sc1">
     <div class="card">
       <div class="card-title">Choose Your Package</div>
-      <p class="pkg-link-note">Not sure which package to get? View our full menu first.</p>
-      <a href="https://clubcreo.my.canva.site/packages" target="_blank" class="pkg-link">
-        📋 View Packages & Pricing
-      </a>
-      <div class="field" style="margin-bottom:0;">
-        <label for="bk-pkg">Package Name *</label>
-        <input type="text" id="bk-pkg" placeholder="e.g. Crowd Cam, Styleshots S, VIP Grad Glam…" autocomplete="off">
-        <div class="err-msg" id="err-pkg">Please enter the package name.</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Select a package below to get started. For full details and pricing, <a href="https://clubcreo.my.canva.site/packages" target="_blank" style="color:var(--teal);font-weight:600;">view our menu →</a></p>
+
+      <!-- Self Shoot Packages -->
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--teal);font-weight:600;margin-bottom:10px;">📸 Self Shoot — Basic</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">
+        <div class="pkg-card" onclick="selectPkg('Snapshot Selfie','1-2 pax • 20 min • ₱500')">
+          <div class="pkg-name">Snapshot Selfie</div>
+          <div class="pkg-desc">1-2 pax • 20 min • ₱500</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card" onclick="selectPkg('Tribe Time','1-4 pax • 20 min • ₱800')">
+          <div class="pkg-name">Tribe Time</div>
+          <div class="pkg-desc">1-4 pax • 20 min • ₱800</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card" onclick="selectPkg('Crowd Cam','1-6 pax • 20 min • ₱1,000')">
+          <div class="pkg-name">Crew Captures</div>
+          <div class="pkg-desc">1-6 pax • 20 min • ₱1,000</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card" onclick="selectPkg('Crew Captures','1-10 pax • 20 min • ₱1,200')">
+          <div class="pkg-name">Crowd Cam</div>
+          <div class="pkg-desc">1-10 pax • 20 min • ₱1,200</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
       </div>
+
+      <!-- Photographer Packages -->
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);font-weight:600;margin-bottom:10px;">🎬 Photographer Sessions</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">
+        <div class="pkg-card gold" onclick="selectPkg('Styleshots','Solo portrait • from ₱1,500')">
+          <div class="pkg-name">Styleshots</div>
+          <div class="pkg-desc">Solo portrait • from ₱1,500</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card gold" onclick="selectPkg('Family Portraits','Up to 20 pax • from ₱1,700')">
+          <div class="pkg-name">Family Portraits</div>
+          <div class="pkg-desc">Up to 20 pax • from ₱1,700</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card gold" onclick="selectPkg('Radiant Mama','Maternity • from ₱2,000')">
+          <div class="pkg-name">Radiant Mama</div>
+          <div class="pkg-desc">Maternity • from ₱2,000</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card gold" onclick="selectPkg('Candid Kids','Kids 1-10yo • from ₱1,500')">
+          <div class="pkg-name">Candid Kids</div>
+          <div class="pkg-desc">Kids 1-10yo • from ₱1,500</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+      </div>
+
+      <!-- Graduation Packages -->
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#5b63d9;font-weight:600;margin-bottom:10px;">🎓 Graduation</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">
+        <div class="pkg-card grad" onclick="selectPkg('Cap \& Gown','Toga shots • ₱700')">
+          <div class="pkg-name">Cap & Gown</div>
+          <div class="pkg-desc">Toga shots • ₱700</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card grad" onclick="selectPkg('Grad-U-Click','Grad + family • ₱1,500')">
+          <div class="pkg-name">Grad-U-Click</div>
+          <div class="pkg-desc">Grad + family • ₱1,500</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card grad" onclick="selectPkg('VIP Grad Glam','All-in + HMU • ₱3,000')">
+          <div class="pkg-name">VIP Grad Glam</div>
+          <div class="pkg-desc">All-in + HMU • ₱3,000</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card grad" onclick="selectPkg('PAWtraits','Pets + family • from ₱1,500')">
+          <div class="pkg-name">PAWtraits</div>
+          <div class="pkg-desc">Pets + family • from ₱1,500</div>
+          <div class="pkg-book">Book Now →</div>
+        </div>
+      </div>
+
+      <!-- Other / Custom -->
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-weight:600;margin-bottom:10px;">📋 Other Package</div>
+      <div class="field" style="margin-bottom:0;">
+        <input type="text" id="bk-pkg" placeholder="Type your package name here..." autocomplete="off">
+        <div class="err-msg" id="err-pkg">Please select or enter a package name.</div>
+      </div>
+      <button class="btn-main" style="margin-top:12px;" onclick="validatePkg()">Continue with Custom Package →</button>
     </div>
-    <button class="btn-main" onclick="validatePkg()">Continue →</button>
   </div>
 
   <!-- SCREEN 2: Schedule -->
   <div class="screen" id="sc2">
+    <div id="pkg-confirm-banner"></div>
     <div class="card">
       <div class="card-title">Pick a Date & Time</div>
       <div class="field">
@@ -498,6 +584,61 @@ function updateSteps(cur) {
     if (i < 5) document.getElementById('sl' + i).className = 'sline' + (i < cur ? ' done' : '');
   }
 }
+
+function selectPkg(name, desc, price){
+  if(!name) return;
+  document.getElementById('bk-pkg').value = name;
+  document.getElementById('bk-pkg').classList.remove('err');
+  var errEl = document.getElementById('err-pkg');
+  if(errEl) errEl.classList.remove('show');
+  
+  // Store price for display
+  window._selectedPkgPrice = price || '';
+  
+  // Show confirmation banner
+  var banner = document.getElementById('pkg-confirm-banner');
+  if(banner){
+    banner.innerHTML = '<div style="background:rgba(81,137,125,0.06);border:1.5px solid rgba(81,137,125,0.2);border-radius:10px;padding:14px 16px;margin-bottom:16px;">'+
+      '<div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:4px;">✓ Selected Package</div>'+
+      '<div style="font-size:16px;font-weight:700;color:var(--slate);">' + name + '</div>'+
+      (price ? '<div style="font-size:14px;color:var(--gold);font-weight:600;margin-top:2px;">₱' + price + '</div>' : '')+
+      (desc ? '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' + desc + '</div>' : '')+
+      '<button onclick="goSc(1)" style="margin-top:8px;font-size:11px;color:var(--teal);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;">← Change package</button>'+
+    '</div>';
+  }
+  goSc(2);
+}
+
+// Auto-detect ?pkg= URL parameter — show on screen 1 with confirmation first
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var pkg   = params.get('pkg');
+  var price = params.get('price') || '';
+  if(pkg){
+    var decodedPkg = decodeURIComponent(pkg);
+    // Pre-fill the package field
+    setTimeout(function(){
+      document.getElementById('bk-pkg').value = decodedPkg;
+      window._selectedPkgPrice = price;
+      
+      // Show confirmation card on screen 1 with a "Confirm & Choose Date" button
+      var banner = document.getElementById('pkg-confirm-banner');
+      if(banner){
+        banner.innerHTML =
+          '<div style="background:linear-gradient(135deg,rgba(81,137,125,0.06),rgba(215,144,104,0.06));border:2px solid rgba(81,137,125,0.2);border-radius:14px;padding:20px;margin-bottom:16px;text-align:center;">'+
+            '<div style="font-size:36px;margin-bottom:8px;">📸</div>'+
+            '<div style="font-size:11px;color:var(--teal);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Your Selected Package</div>'+
+            '<div style="font-size:20px;font-weight:700;color:var(--slate);margin-bottom:4px;">'+decodedPkg+'</div>'+
+            (price?'<div style="font-size:18px;font-weight:600;color:var(--gold);margin-bottom:12px;">₱'+price+'</div>':'')+
+            '<button onclick="selectPkg(\''+decodedPkg.replace(/'/g,"\\'")+'\',\'\',\''+price+'\')" style="background:var(--gold);color:#fff;border:none;padding:14px 36px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">Confirm & Choose Date →</button>'+
+            '<div style="margin-top:10px;">'+
+              '<button onclick="document.getElementById(\'pkg-confirm-banner\').innerHTML=\'\'" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;">← Choose a different package</button>'+
+            '</div>'+
+          '</div>';
+      }
+    }, 200);
+  }
+})();
 
 // Validation
 function validatePkg() {
