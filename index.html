@@ -609,34 +609,13 @@ function selectPkg(name, desc, price){
   goSc(2);
 }
 
-// Auto-detect ?pkg= URL parameter — show on screen 1 with confirmation first
+// Auto-detect ?pkg= URL parameter — go directly to step 2
 (function(){
   var params = new URLSearchParams(window.location.search);
   var pkg   = params.get('pkg');
   var price = params.get('price') || '';
   if(pkg){
-    var decodedPkg = decodeURIComponent(pkg);
-    // Pre-fill the package field
-    setTimeout(function(){
-      document.getElementById('bk-pkg').value = decodedPkg;
-      window._selectedPkgPrice = price;
-      
-      // Show confirmation card on screen 1 with a "Confirm & Choose Date" button
-      var banner = document.getElementById('pkg-confirm-banner');
-      if(banner){
-        banner.innerHTML =
-          '<div style="background:linear-gradient(135deg,rgba(81,137,125,0.06),rgba(215,144,104,0.06));border:2px solid rgba(81,137,125,0.2);border-radius:14px;padding:20px;margin-bottom:16px;text-align:center;">'+
-            '<div style="font-size:36px;margin-bottom:8px;">📸</div>'+
-            '<div style="font-size:11px;color:var(--teal);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Your Selected Package</div>'+
-            '<div style="font-size:20px;font-weight:700;color:var(--slate);margin-bottom:4px;">'+decodedPkg+'</div>'+
-            (price?'<div style="font-size:18px;font-weight:600;color:var(--gold);margin-bottom:12px;">₱'+price+'</div>':'')+
-            '<button onclick="selectPkg(\''+decodedPkg.replace(/'/g,"\\'")+'\',\'\',\''+price+'\')" style="background:var(--gold);color:#fff;border:none;padding:14px 36px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">Confirm & Choose Date →</button>'+
-            '<div style="margin-top:10px;">'+
-              '<button onclick="document.getElementById(\'pkg-confirm-banner\').innerHTML=\'\'" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;">← Choose a different package</button>'+
-            '</div>'+
-          '</div>';
-      }
-    }, 200);
+    setTimeout(function(){ selectPkg(decodeURIComponent(pkg), '', price); }, 300);
   }
 })();
 
