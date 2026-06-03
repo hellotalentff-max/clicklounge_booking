@@ -80,7 +80,7 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
 .cal-nav-btn:hover{border-color:var(--teal-lt);color:var(--teal);}
 .cal-month-lbl{font-size:14px;font-weight:600;color:var(--slate);}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:8px 8px 4px;}
-.cal-dow{text-align:center;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:4px 0 6px;}
+.cal-dow{text-align:center;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);padding:4px 0 6px;}
 .cal-dow.sun-lbl{color:var(--danger);}
 .cal-day{text-align:center;padding:5px 2px;border-radius:7px;cursor:pointer;font-size:12px;min-height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .12s;font-weight:500;line-height:1;}
 .cal-day.blank{visibility:hidden;pointer-events:none;}
@@ -159,23 +159,6 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
 .ref-code{font-size:20px;font-weight:700;color:var(--teal-dk);letter-spacing:3px;}
 .page-footer{text-align:center;font-size:10px;color:var(--muted);padding:16px;border-top:1px solid var(--light2);margin-top:8px;}
 </style>
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '352618715991796');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=352618715991796&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -455,6 +438,19 @@ src="https://www.facebook.com/tr?id=352618715991796&ev=PageView&noscript=1"
       <div class="pay-method"><div class="pay-icon">&#128181;</div><div><div class="pay-name">Cash</div><div class="pay-detail">Pay in person at the studio</div><div class="pay-sub">Tell us via Messenger if paying cash</div></div></div>
     </div>
     <div class="alert-box">&#9888; <strong>Reminder:</strong> Non-payment within <strong>4 hours</strong> will release this slot. Your booking is only confirmed once we receive your payment proof via Facebook Messenger.</div>
+
+    <!-- Feedback + Spin Wheel callout -->
+    <div style="background:#fff;border:1.5px solid rgba(215,144,104,.3);border-radius:12px;padding:18px 20px;margin-bottom:14px;text-align:center;">
+      <div style="font-size:22px;margin-bottom:8px;">🎡</div>
+      <div style="font-size:14px;font-weight:700;color:var(--slate);margin-bottom:6px;">After Your Session</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;">Leave us a review, share your experience, and <strong style="color:var(--gold);">spin the wheel</strong> for a surprise gift — redeemable on your next visit!</div>
+      <a href="https://hellotalentff-max.github.io/clicklounge_feedbackstw/" target="_blank"
+        style="display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#3d2000;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;padding:12px 24px;border-radius:100px;text-decoration:none;box-shadow:0 2px 10px rgba(215,144,104,.35);">
+        ✨ Rate &amp; Spin the Wheel →
+      </a>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;">Available after your session is complete.</div>
+    </div>
+
     <a href="https://www.facebook.com/clickloungestudio" target="_blank" style="display:block;margin-bottom:10px;"><button class="btn-main" style="background:var(--slate);">&#128216; Message Us on Facebook</button></a>
     <button class="btn-back" style="width:100%;text-align:center;" onclick="resetForm()">&#8592; Book Another Session</button>
   </div>
@@ -467,6 +463,10 @@ src="https://www.facebook.com/tr?id=352618715991796&ev=PageView&noscript=1"
 // CONFIG
 // ════════════════════════════════════════════════
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbx_Y5nH34Rq16JJ2AxBDr30ttmDFuic61OqoC0u3Wq0zogHEhfoV6qE7uiNagI43flVgw/exec';
+// ── APPS SCRIPT ACTIONS USED ──────────────────────────────────────────────
+// createBooking  → creates [PENDING] Google Calendar event (POS reads this)
+// getCalendarEvents { year, month } → returns all events (bookings + blocks)
+// confirmBooking → POS-only, changes event to [CONFIRMED]
 
 // ════════════════════════════════════════════════
 // API — XHR (replaces JSONP — eliminates iOS crash bug)
@@ -504,7 +504,7 @@ var SLOT_CAP  = 2; // max concurrent bookings per slot
 var selDate = '', selSlot = '', takenSlots = [];
 var _pkg = '', _pkgPrice = '', _pkgDesc = '', _pkgDur = 60;
 var calY = 0, calM = 0;
-var availMap = {}, txCache = [], dataFetched = false;
+var availMap = {}, txCache = [], blockedDates = [], dataFetched = false;
 
 // ════════════════════════════════════════════════
 // PHILIPPINE TIME HELPERS
@@ -600,7 +600,7 @@ function renderCal() {
   var firstDs   = calY + '-' + pad(calM+1) + '-01';
   var firstDOW  = (dayOfWeekPH(firstDs) + 6) % 7; // Mon=0 … Sun=6 in PH time
   var totalDays = new Date(Date.UTC(calY, calM+1, 0, 4, 0, 0)).getUTCDate();
-  var html      = ['M','T','W','T','F','S','S'].map(function(d,i){
+  var html = ['Mo','Tu','We','Th','Fr','Sa','Su'].map(function(d,i){
     return '<div class="cal-dow' + (i===6?' sun-lbl':'') + '">' + d + '</div>';
   }).join('');
 
@@ -634,32 +634,42 @@ function renderCal() {
 
 function loadCalData() {
   if (dataFetched) return;
-  gasCall('getTransactions', {})
+
+  // Use getCalendarEvents — same source the POS Bookings Calendar reads.
+  // getTransactions returns POS invoices, not booking requests — wrong source.
+  var now = nowPH();
+  gasCall('getCalendarEvents', { year: now.getFullYear(), month: now.getMonth() })
     .then(function(res) {
-      txCache = (res.data || res.transactions || []);
+      var events = Array.isArray(res.events) ? res.events : [];
+      txCache      = events;
+      // Extract blocked dates from [BLOCKED] calendar events (written by POS)
+      blockedDates = events
+        .filter(function(ev){ return /\[BLOCKED\]/i.test(ev.title||''); })
+        .map(function(ev){ return String(ev.start||'').slice(0,10); })
+        .filter(Boolean);
       buildAvailMap();
       dataFetched = true;
       renderCal();
     })
     .catch(function() {
-      // Also try getBookings
-      gasCall('getBookings', {})
-        .then(function(res2) {
-          txCache = (res2.bookings || res2.data || []);
-          buildAvailMap();
-          dataFetched = true;
-          renderCal();
-        })
-        .catch(function(){
-          dataFetched = true; // leave all days as available
-        });
+      // getCalendarEvents not available — try getTransactions as last resort
+      gasCall('getTransactions', {})
+        .then(function(r) { txCache = (r.data||r.transactions||[]); buildAvailMap(); dataFetched=true; renderCal(); })
+        .catch(function() { dataFetched = true; }); // show all days open
     });
 }
 
 function buildAvailMap() {
   var counts = {};
-  txCache.forEach(function(tx) {
-    var d = normDate(tx.date || tx['Date'] || tx['Booking Date'] || '');
+  txCache.forEach(function(ev) {
+    // Only count actual bookings — ignore [BLOCKED] events
+    var title = ev.title || '';
+    if (/\[BLOCKED\]/i.test(title)) return;
+    // Count pending + confirmed events (matches what POS shows as occupied)
+    var status = (ev.status || '').toLowerCase();
+    if (status === 'cancelled') return;
+    // Get date from event
+    var d = normDate(ev.start || ev.date || ev['Date'] || '');
     if (!d) return;
     counts[d] = (counts[d]||0) + 1;
   });
@@ -667,9 +677,11 @@ function buildAvailMap() {
   availMap  = {};
   Object.keys(counts).forEach(function(d) {
     var n = counts[d];
-    if      (n >= total)                      availMap[d] = 'full';
-    else if (n >= Math.floor(total * 0.6))    availMap[d] = 'few';
+    if      (n >= total)                   availMap[d] = 'full';
+    else if (n >= Math.floor(total * 0.6)) availMap[d] = 'few';
   });
+  // Mark [BLOCKED] calendar events as closed (written by POS block-date feature)
+  blockedDates.forEach(function(d) { if (d) availMap[d] = 'blocked'; });
 }
 
 function pickDate(ds) {
@@ -684,20 +696,56 @@ function pickDate(ds) {
   document.getElementById('slots-loading').style.display = '';
   document.getElementById('slots-note').style.display   = 'none';
 
-  gasCall('getBookedSlots', { date: ds })
-    .then(function(res) {
-      takenSlots = Array.isArray(res.takenSlots) ? res.takenSlots : [];
-      document.getElementById('slots-loading').style.display = 'none';
-      renderSlots();
-    })
-    .catch(function() {
-      takenSlots = [];
-      document.getElementById('slots-loading').style.display = 'none';
-      renderSlots();
-      document.getElementById('slots-note').textContent =
-        '&#9888; Could not load live availability. All slots shown — we will verify when you submit.';
-      document.getElementById('slots-note').style.display = '';
+  // Derive taken slots from already-loaded calendar events for this date.
+  // getBookedSlots has no Apps Script handler in the POS — use calendar events instead.
+  // If data isn't loaded yet, fetch it first.
+  function buildTakenSlots() {
+    var taken = [];
+    txCache.forEach(function(ev) {
+      var evDate = String(ev.start || '').slice(0,10);
+      if (evDate !== ds) return;
+      if (/\[BLOCKED\]/i.test(ev.title||'')) {
+        // Full-day or time-specific block — add all slots or the specific time
+        var evTime = ev.timeSlot || ev.time || '';
+        if (!evTime) { ALL_SLOTS.forEach(function(s){ if(taken.indexOf(s)===-1) taken.push(s); }); }
+        else if (taken.indexOf(evTime)===-1) taken.push(evTime);
+        return;
+      }
+      var status = (ev.status||'').toLowerCase();
+      if (status === 'cancelled') return;
+      var t = (ev.timeSlot || ev.time || '').trim();
+      if (t && taken.indexOf(t) === -1) taken.push(t);
     });
+    return taken;
+  }
+
+  if (dataFetched) {
+    takenSlots = buildTakenSlots();
+    document.getElementById('slots-loading').style.display = 'none';
+    renderSlots();
+  } else {
+    // Load calendar data first, then show slots
+    var now = nowPH();
+    gasCall('getCalendarEvents', { year: now.getFullYear(), month: now.getMonth() })
+      .then(function(res) {
+        txCache = Array.isArray(res.events) ? res.events : [];
+        blockedDates = txCache
+          .filter(function(ev){ return /\[BLOCKED\]/i.test(ev.title||''); })
+          .map(function(ev){ return String(ev.start||'').slice(0,10); });
+        buildAvailMap(); renderCal();
+        takenSlots = buildTakenSlots();
+        document.getElementById('slots-loading').style.display = 'none';
+        renderSlots();
+      })
+      .catch(function() {
+        takenSlots = [];
+        document.getElementById('slots-loading').style.display = 'none';
+        renderSlots();
+        document.getElementById('slots-note').textContent =
+          '⚠ Could not load live availability. All slots shown — we will verify when you submit.';
+        document.getElementById('slots-note').style.display = '';
+      });
+  }
 }
 
 function renderSlots() {
@@ -887,23 +935,45 @@ function submitBooking() {
     document.getElementById('done-date').textContent = phDate(selDate).toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric',year:'numeric',timeZone:'Asia/Manila'});
     document.getElementById('done-time').textContent = selSlot;
     document.getElementById('done-ref').textContent  = ref;
+
+    // ── Push confirmation URL (for Meta Pixel URL-based tracking) ──
+    // URL becomes: /clicklounge_booking/?booking=confirmed
+    // Set up pixel to fire on URL contains "booking=confirmed"
+    if (window.history && window.history.pushState) {
+      window.history.pushState({ step:'confirmed' }, '', '?booking=confirmed');
+    }
+
+    // ── Fire Meta Pixel events ──
+    if (typeof fbq !== 'undefined') {
+      fbq('track', 'Lead', {
+        content_name: payload.package,
+        content_category: 'Studio Booking',
+        value: parseFloat(payload.price) || 300,
+        currency: 'PHP'
+      });
+      fbq('track', 'Purchase', {
+        content_name: payload.package,
+        content_category: 'Studio Booking',
+        value: 300,          // downpayment amount
+        currency: 'PHP',
+        content_ids: [ref]
+      });
+    }
+
     goSc(5);
   }
 
-  // Try createBooking (original action), then addBooking (new action), then show success anyway
+  // createBooking creates a [PENDING] Google Calendar event — the POS picks it up
+  // via getCalendarEvents every 60s. addBooking fallback removed: it writes to a
+  // sheet the POS never reads, so submissions would be invisible to staff.
   gasCall('createBooking', payload)
     .then(function(res) {
       showDone(res.bookingId || res.ref || ('CLS-'+Date.now().toString(36).toUpperCase()));
     })
     .catch(function() {
-      gasCall('addBooking', payload)
-        .then(function(res2) {
-          showDone(res2.ref || ('CLS-'+Date.now().toString(36).toUpperCase()));
-        })
-        .catch(function() {
-          // Both failed — still confirm. Client messages on Facebook.
-          showDone('CLS-' + Date.now().toString(36).toUpperCase());
-        });
+      // createBooking failed — show done screen anyway.
+      // Client screenshots ref and messages on Facebook as normal.
+      showDone('CLS-' + Date.now().toString(36).toUpperCase());
     });
 }
 
@@ -911,7 +981,11 @@ function submitBooking() {
 // RESET
 // ════════════════════════════════════════════════
 function resetForm() {
-  selDate=''; selSlot=''; takenSlots=[]; availMap={}; dataFetched=false; txCache=[];
+  // Restore clean URL when starting a new booking
+  if (window.history && window.history.pushState) {
+    window.history.pushState({}, '', location.pathname);
+  }
+  selDate=''; selSlot=''; takenSlots=[]; availMap={}; dataFetched=false; txCache=[]; blockedDates=[];
   _pkg=''; _pkgPrice=''; _pkgDesc=''; _pkgDur=60;
   ['bk-pkg','bk-fb','bk-phone','bk-email','bk-notes'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
