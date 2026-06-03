@@ -505,7 +505,14 @@ function tomorrowPH() {
 }
 function pad(n) { return String(n).padStart(2,'0'); }
 function isSunday(ds) {
-  return new Date(ds+'T12:00:00').toLocaleDateString('en-PH',{weekday:'short',timeZone:'Asia/Manila'}) === 'Sun';
+  // Use noon PH time — avoids midnight edge-case shifting the day across timezones
+  return new Date(ds + 'T12:00:00').toLocaleDateString('en-PH', { weekday:'short', timeZone:'Asia/Manila' }) === 'Sun';
+}
+
+function dayOfWeekPH(ds) {
+  // Returns 0=Sun, 1=Mon … 6=Sat in PH time
+  var short = new Date(ds + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', timeZone:'Asia/Manila' });
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(short);
 }
 function normDate(val) {
   if (!val) return '';
@@ -574,7 +581,8 @@ function renderCal() {
   document.getElementById('cal-title').textContent = MONTHS[calM] + ' ' + calY;
   var today     = todayPH();
   var tomorrow  = tomorrowPH();
-  var firstDOW  = (new Date(calY, calM, 1).getDay() + 6) % 7; // 0=Mon
+  var firstDs   = calY + '-' + pad(calM+1) + '-01';
+  var firstDOW  = (dayOfWeekPH(firstDs) + 6) % 7; // Mon=0 … Sun=6 in PH time
   var totalDays = new Date(calY, calM+1, 0).getDate();
   var html      = ['M','T','W','T','F','S','S'].map(function(d,i){
     return '<div class="cal-dow' + (i===6?' sun-lbl':'') + '">' + d + '</div>';
@@ -584,7 +592,7 @@ function renderCal() {
 
   for (var d=1; d<=totalDays; d++) {
     var ds  = calY + '-' + pad(calM+1) + '-' + pad(d);
-    var sun = isSunday(ds);
+    var sun = isSunday(ds);                     // checked in PH time
     var past    = ds <= today;
     var avail   = availMap[ds];
     var isToday = ds === today;
