@@ -504,16 +504,15 @@ function tomorrowPH() {
   return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
 }
 function pad(n) { return String(n).padStart(2,'0'); }
-function isSunday(ds) {
-  // Use noon PH time — avoids midnight edge-case shifting the day across timezones
-  return new Date(ds + 'T12:00:00').toLocaleDateString('en-PH', { weekday:'short', timeZone:'Asia/Manila' }) === 'Sun';
+// PHT = UTC+8. Noon PHT = 04:00 UTC. Using Date.UTC ensures
+// the day-of-week is always correct in Manila regardless of
+// the viewer's browser timezone — no toLocaleDateString needed.
+function phDate(ds) {
+  var p = ds.split('-');
+  return new Date(Date.UTC(+p[0], +p[1]-1, +p[2], 4, 0, 0));
 }
-
-function dayOfWeekPH(ds) {
-  // Returns 0=Sun, 1=Mon … 6=Sat in PH time
-  var short = new Date(ds + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', timeZone:'Asia/Manila' });
-  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(short);
-}
+function isSunday(ds)    { return phDate(ds).getUTCDay() === 0; }
+function dayOfWeekPH(ds) { return phDate(ds).getUTCDay(); } // 0=Sun,1=Mon…6=Sat
 function normDate(val) {
   if (!val) return '';
   if (typeof val==='number' && val>40000 && val<100000)
@@ -583,7 +582,7 @@ function renderCal() {
   var tomorrow  = tomorrowPH();
   var firstDs   = calY + '-' + pad(calM+1) + '-01';
   var firstDOW  = (dayOfWeekPH(firstDs) + 6) % 7; // Mon=0 … Sun=6 in PH time
-  var totalDays = new Date(calY, calM+1, 0).getDate();
+  var totalDays = new Date(Date.UTC(calY, calM+1, 0, 4, 0, 0)).getUTCDate();
   var html      = ['M','T','W','T','F','S','S'].map(function(d,i){
     return '<div class="cal-dow' + (i===6?' sun-lbl':'') + '">' + d + '</div>';
   }).join('');
@@ -661,7 +660,7 @@ function pickDate(ds) {
   renderCal();
   document.getElementById('err-date').classList.remove('show');
 
-  var d     = new Date(ds + 'T12:00:00');
+  var d     = phDate(ds);
   var label = d.toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric',year:'numeric',timeZone:'Asia/Manila'});
   document.getElementById('slots-label').textContent = 'Times for ' + label;
   document.getElementById('slots-wrap').style.display  = 'none';
@@ -816,7 +815,7 @@ function validateInfo() {
 }
 
 function buildConfirm() {
-  var d = new Date(selDate + 'T12:00:00');
+  var d = phDate(selDate);
   var dateLabel = d.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric',timeZone:'Asia/Manila'});
   document.getElementById('sm-pkg').textContent   = _pkg + (_pkgPrice ? ' — &#8369;' + parseInt(_pkgPrice).toLocaleString() : '');
   document.getElementById('sm-date').textContent  = dateLabel;
@@ -868,7 +867,7 @@ function submitBooking() {
   function showDone(ref) {
     document.getElementById('done-name').textContent = payload.fbName;
     document.getElementById('done-pkg').textContent  = payload.package;
-    document.getElementById('done-date').textContent = new Date(selDate+'T12:00:00').toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric',year:'numeric',timeZone:'Asia/Manila'});
+    document.getElementById('done-date').textContent = phDate(selDate).toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric',year:'numeric',timeZone:'Asia/Manila'});
     document.getElementById('done-time').textContent = selSlot;
     document.getElementById('done-ref').textContent  = ref;
     goSc(5);
