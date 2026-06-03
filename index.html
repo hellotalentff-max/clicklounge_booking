@@ -229,14 +229,26 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
         <div class="pkg-card gold" onclick="selectPkg('Styleshots','Solo portrait · ~1 hr','1500',60)">
           <div class="pkg-name">Styleshots</div><div class="pkg-desc">Solo portrait · from ₱1,500</div><div class="pkg-book">Book Now →</div>
         </div>
+        <div class="pkg-card gold" onclick="selectPkg('Promo Styleshots','Solo portrait + HMU · ~1 hr shoot','',90)">
+          <div class="pkg-name">Promo Styleshots <span style="font-size:9px;background:rgba(215,144,104,0.2);color:var(--gold);padding:1px 6px;border-radius:10px;font-weight:600;vertical-align:middle;">HMU</span></div>
+          <div class="pkg-desc">Solo + Hair &amp; Makeup · arrive 1.5 hrs early</div><div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card gold" onclick="selectPkg('Couple Styleshots Promo','2 pax + HMU · ~1 hr shoot','',90)">
+          <div class="pkg-name">Couple Styleshots Promo <span style="font-size:9px;background:rgba(215,144,104,0.2);color:var(--gold);padding:1px 6px;border-radius:10px;font-weight:600;vertical-align:middle;">HMU</span></div>
+          <div class="pkg-desc">Couple + Hair &amp; Makeup · arrive 1.5 hrs early</div><div class="pkg-book">Book Now →</div>
+        </div>
         <div class="pkg-card gold" onclick="selectPkg('Couple Styleshots','2 pax · ~1 hr','2500',60)">
           <div class="pkg-name">Couple Styleshots</div><div class="pkg-desc">2 pax · from ₱2,500</div><div class="pkg-book">Book Now →</div>
         </div>
         <div class="pkg-card gold" onclick="selectPkg('Pop Reveal','Gender reveal · ~1 hr','3000',60)">
           <div class="pkg-name">Pop Reveal</div><div class="pkg-desc">Gender reveal · ₱3,000</div><div class="pkg-book">Book Now →</div>
         </div>
-        <div class="pkg-card gold" onclick="selectPkg('Radiant Mama','Maternity · from ₱2,000','2000',60)">
-          <div class="pkg-name">Radiant Mama</div><div class="pkg-desc">Maternity · from ₱2,000</div><div class="pkg-book">Book Now →</div>
+        <div class="pkg-card gold" onclick="selectPkg('Radiant Mama - Mama Love','Maternity · ~1 hr','2000',60)">
+          <div class="pkg-name">Radiant Mama — Mama Love</div><div class="pkg-desc">Maternity · ₱2,000</div><div class="pkg-book">Book Now →</div>
+        </div>
+        <div class="pkg-card gold" onclick="selectPkg('Radiant Mama - Glowing Mom','Maternity + HMU · ~1 hr shoot','4500',90)">
+          <div class="pkg-name">Radiant Mama — Glowing Mom <span style="font-size:9px;background:rgba(215,144,104,0.2);color:var(--gold);padding:1px 6px;border-radius:10px;font-weight:600;vertical-align:middle;">HMU</span></div>
+          <div class="pkg-desc">Maternity + Hair &amp; Makeup · ₱4,500 · arrive 1.5 hrs early</div><div class="pkg-book">Book Now →</div>
         </div>
         <div class="pkg-card gold" onclick="selectPkg('Candid Kids','Kids 1-10yo · from ₱1,500','1500',60)">
           <div class="pkg-name">Candid Kids</div><div class="pkg-desc">Kids 1-10yo · from ₱1,500</div><div class="pkg-book">Book Now →</div>
@@ -257,8 +269,8 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
         <div class="pkg-card grad" onclick="selectPkg('Grad-U-Click','Grad + family · ~1 hr','1500',60)">
           <div class="pkg-name">Grad-U-Click</div><div class="pkg-desc">Grad + family · ₱1,500</div><div class="pkg-book">Book Now →</div>
         </div>
-        <div class="pkg-card grad" onclick="selectPkg('VIP Grad Glam','All-in + HMU · ~2 hrs','3000',120)">
-          <div class="pkg-name">VIP Grad Glam</div><div class="pkg-desc">All-in + HMU · ₱3,000</div><div class="pkg-book">Book Now →</div>
+        <div class="pkg-card grad" onclick="selectPkg('VIP Grad Glam','All-in + HMU · ~1.5 hr shoot','3000',90)">
+          <div class="pkg-name">VIP Grad Glam <span style="font-size:9px;background:rgba(91,99,217,0.15);color:#5b63d9;padding:1px 6px;border-radius:10px;font-weight:600;vertical-align:middle;">HMU</span></div><div class="pkg-desc">All-in + HMU · ₱3,000 · arrive 1.5 hrs early</div><div class="pkg-book">Book Now →</div>
         </div>
         <div class="pkg-card grad" onclick="selectPkg('Bridal Bliss','Bridal style shots · ~2 hrs','5000',120)">
           <div class="pkg-name">Bridal Bliss</div><div class="pkg-desc">Bridal style shots · ₱5,000</div><div class="pkg-book">Book Now →</div>
@@ -504,7 +516,8 @@ var SLOT_CAP  = 2; // max concurrent bookings per slot
 var selDate = '', selSlot = '', takenSlots = [];
 var _pkg = '', _pkgPrice = '', _pkgDesc = '', _pkgDur = 60;
 var calY = 0, calM = 0;
-var availMap = {}, txCache = [], blockedDates = [], dataFetched = false;
+var availMap = {}, txCache = [], blockedDates = [];
+var calCache = {};
 
 // ════════════════════════════════════════════════
 // PHILIPPINE TIME HELPERS
@@ -546,15 +559,25 @@ function selectPkg(name, desc, price, duration) {
   document.getElementById('bk-pkg').value = name;
   document.getElementById('err-pkg').classList.remove('show');
 
+  var hmu = hasHMU(name);
   var banner = document.getElementById('pkg-confirm-banner');
   if (banner) {
+    var hmuNotice = hmu
+      ? '<div style="background:rgba(215,144,104,0.1);border:1.5px solid rgba(215,144,104,0.4);border-radius:8px;padding:10px 12px;margin-top:10px;display:flex;align-items:flex-start;gap:8px;">' +
+        '<span style="font-size:16px;flex-shrink:0;">💄</span>' +
+        '<div style="font-size:11px;color:var(--slate);line-height:1.6;">' +
+        '<strong>This package includes Hair &amp; Makeup (HMU).</strong><br>' +
+        'Please arrive <strong>1.5 hours before</strong> your selected time slot so your HMU session can start on time. Your photo session begins after HMU is complete.' +
+        '</div></div>'
+      : '';
     banner.innerHTML =
       '<div style="background:rgba(81,137,125,.06);border:1.5px solid rgba(81,137,125,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px;">' +
       '<div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:4px;">&#10003; Selected Package</div>' +
       '<div style="font-size:16px;font-weight:700;color:var(--slate);">' + name + '</div>' +
       (price ? '<div style="font-size:14px;color:var(--gold);font-weight:600;margin-top:2px;">&#8369;' + parseInt(price).toLocaleString() + '</div>' : '') +
       (desc  ? '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' + desc + '</div>' : '') +
-      '<button onclick="goSc(1)" style="margin-top:8px;font-size:11px;color:var(--teal);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;">&#8592; Change package</button>' +
+      hmuNotice +
+      '<button onclick="goSc(1)" style="margin-top:10px;font-size:11px;color:var(--teal);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;">&#8592; Change package</button>' +
       '</div>';
   }
   goSc(2);
@@ -573,15 +596,24 @@ function validatePkg() {
 // ════════════════════════════════════════════════
 // URL PARAMS from main website Book Now buttons
 // ════════════════════════════════════════════════
+// ── HMU PACKAGES ─────────────────────────────────────────────────────────
+// Promo Styleshots, Radiant Mama - Glowing Mom, VIP Grad Glam include Hair
+// & Makeup. They block 90 min in the calendar (2 × 45-min slots).
+// Client must arrive 1.5 hrs before their scheduled session time for HMU prep.
+function hasHMU(pkg) {
+  return /(promo styleshots|couple styleshots promo|glowing mom|vip grad glam)/i.test(pkg||'');
+}
+
 (function(){
   var p = new URLSearchParams(window.location.search);
   var pkg   = p.get('pkg') || p.get('package') || '';
   var price = p.get('price') || '';
   if (!pkg) return;
-  var dur = 60;
   var pl  = pkg.toLowerCase();
-  if (/(glowing|vip grad|bridal|pawsome|fam vibes|all star|studio booth)/.test(pl)) dur = 120;
-  else if (/(snapshot|tribe|crew|crowd|frenzy|party|click capture|cap and gown|cap & gown)/.test(pl)) dur = 30;
+  var dur = 60;
+  if (/(promo styleshots|couple styleshots promo|glowing mom|vip grad glam)/.test(pl)) dur = 90;  // HMU
+  else if (/(bridal|pawsome|fam vibes|all star|studio booth)/.test(pl))                  dur = 120;
+  else if (/(snapshot|tribe|crew|crowd|frenzy|party|click capture|cap and gown)/.test(pl)) dur = 30;
   setTimeout(function(){ selectPkg(decodeURIComponent(pkg), '', price, dur); }, 100);
 })();
 
@@ -590,8 +622,8 @@ function validatePkg() {
 // ════════════════════════════════════════════════
 var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-function calPrev() { calM--; if(calM<0){calM=11;calY--;} dataFetched=false; renderCal(); loadCalData(); }
-function calNext() { calM++; if(calM>11){calM=0;calY++;} dataFetched=false; renderCal(); loadCalData(); }
+function calPrev() { calM--; if(calM<0){calM=11;calY--;} renderCal(); loadCalData(); }
+function calNext() { calM++; if(calM>11){calM=0;calY++;} renderCal(); loadCalData(); }
 
 function renderCal() {
   document.getElementById('cal-title').textContent = MONTHS[calM] + ' ' + calY;
@@ -632,30 +664,47 @@ function renderCal() {
   document.getElementById('cal-grid').innerHTML = html;
 }
 
-function loadCalData() {
-  if (dataFetched) return;
+// Cache events per month key so navigating back is instant
+var calCache = {}; // { 'YYYY-M': [events...] }
 
-  // Use getCalendarEvents — same source the POS Bookings Calendar reads.
-  // getTransactions returns POS invoices, not booking requests — wrong source.
-  var now = nowPH();
-  gasCall('getCalendarEvents', { year: now.getFullYear(), month: now.getMonth() })
+function loadCalData() {
+  var key = calY + '-' + calM;
+  if (calCache[key]) {
+    // Already fetched — rebuild map and render
+    txCache = calCache[key];
+    blockedDates = txCache
+      .filter(function(ev){ return /\[BLOCKED\]/i.test(ev.title||''); })
+      .map(function(ev){ return String(ev.start||'').slice(0,10); })
+      .filter(Boolean);
+    buildAvailMap();
+    renderCal();
+    return;
+  }
+
+  // Fetch the currently viewed month from Google Calendar
+  // month is 0-indexed to match POS's CAL_MONTH convention
+  gasCall('getCalendarEvents', { year: calY, month: calM })
     .then(function(res) {
       var events = Array.isArray(res.events) ? res.events : [];
-      txCache      = events;
-      // Extract blocked dates from [BLOCKED] calendar events (written by POS)
+      calCache[key] = events;
+      txCache = events;
       blockedDates = events
         .filter(function(ev){ return /\[BLOCKED\]/i.test(ev.title||''); })
         .map(function(ev){ return String(ev.start||'').slice(0,10); })
         .filter(Boolean);
       buildAvailMap();
-      dataFetched = true;
       renderCal();
     })
     .catch(function() {
-      // getCalendarEvents not available — try getTransactions as last resort
+      // Fallback: try getTransactions (less accurate but better than nothing)
       gasCall('getTransactions', {})
-        .then(function(r) { txCache = (r.data||r.transactions||[]); buildAvailMap(); dataFetched=true; renderCal(); })
-        .catch(function() { dataFetched = true; }); // show all days open
+        .then(function(r) {
+          txCache = (r.data||r.transactions||[]);
+          calCache[key] = txCache;
+          buildAvailMap();
+          renderCal();
+        })
+        .catch(function() { renderCal(); });
     });
 }
 
@@ -694,7 +743,20 @@ function pickDate(ds) {
   document.getElementById('slots-label').textContent = 'Times for ' + label;
   document.getElementById('slots-wrap').style.display  = 'none';
   document.getElementById('slots-loading').style.display = '';
-  document.getElementById('slots-note').style.display   = 'none';
+
+  // HMU packages — show arrival notice above the time slots
+  var slotsNote = document.getElementById('slots-note');
+  if (hasHMU(_pkg)) {
+    slotsNote.innerHTML =
+      '<span style="font-size:13px;vertical-align:middle;">💄</span> ' +
+      '<strong>Hair &amp; Makeup included:</strong> Please arrive <strong>1.5 hours before</strong> ' +
+      'the time you select below. That slot is your HMU start time — your photo session begins after.';
+    slotsNote.style.color = 'var(--gold)';
+    slotsNote.style.display = '';
+  } else {
+    slotsNote.textContent = '';
+    slotsNote.style.display = 'none';
+  }
 
   // Derive taken slots from already-loaded calendar events for this date.
   // getBookedSlots has no Apps Script handler in the POS — use calendar events instead.
@@ -719,16 +781,18 @@ function pickDate(ds) {
     return taken;
   }
 
-  if (dataFetched) {
+  if (calCache[calY + '-' + calM]) {
     takenSlots = buildTakenSlots();
     document.getElementById('slots-loading').style.display = 'none';
     renderSlots();
   } else {
-    // Load calendar data first, then show slots
-    var now = nowPH();
-    gasCall('getCalendarEvents', { year: now.getFullYear(), month: now.getMonth() })
+    // Data not cached yet — fetch this month's events first
+    var key = calY + '-' + calM;
+    gasCall('getCalendarEvents', { year: calY, month: calM })
       .then(function(res) {
-        txCache = Array.isArray(res.events) ? res.events : [];
+        var events = Array.isArray(res.events) ? res.events : [];
+        calCache[key] = events;
+        txCache = events;
         blockedDates = txCache
           .filter(function(ev){ return /\[BLOCKED\]/i.test(ev.title||''); })
           .map(function(ev){ return String(ev.start||'').slice(0,10); });
@@ -964,16 +1028,24 @@ function submitBooking() {
   }
 
   // createBooking creates a [PENDING] Google Calendar event — the POS picks it up
-  // via getCalendarEvents every 60s. addBooking fallback removed: it writes to a
-  // sheet the POS never reads, so submissions would be invisible to staff.
+  // via getCalendarEvents every 60s. After success, also fire logBooking as a
+  // lightweight backup to a sheet so the POS can cross-check if the calendar fails.
   gasCall('createBooking', payload)
     .then(function(res) {
-      showDone(res.bookingId || res.ref || ('CLS-'+Date.now().toString(36).toUpperCase()));
+      var ref = res.bookingId || res.ref || ('CLS-'+Date.now().toString(36).toUpperCase());
+      // Fire backup log — fire-and-forget, don't wait for it
+      gasCall('logBooking', Object.assign({}, payload, { ref: ref, calendarOk: true })).catch(function(){});
+      showDone(ref);
     })
-    .catch(function() {
-      // createBooking failed — show done screen anyway.
-      // Client screenshots ref and messages on Facebook as normal.
-      showDone('CLS-' + Date.now().toString(36).toUpperCase());
+    .catch(function(err) {
+      // createBooking failed — show an error instead of silently confirming.
+      // Client should try again or contact the studio directly.
+      var btn = document.getElementById('btn-confirm');
+      var errEl = document.getElementById('submit-err');
+      btn.disabled = false;
+      btn.textContent = 'Confirm Booking';
+      errEl.textContent = '⚠ Could not submit your booking. Please try again, or message us directly on Facebook to book manually.';
+      errEl.style.display = 'block';
     });
 }
 
@@ -985,7 +1057,7 @@ function resetForm() {
   if (window.history && window.history.pushState) {
     window.history.pushState({}, '', location.pathname);
   }
-  selDate=''; selSlot=''; takenSlots=[]; availMap={}; dataFetched=false; txCache=[]; blockedDates=[];
+  selDate=''; selSlot=''; takenSlots=[]; availMap={}; txCache=[]; blockedDates=[]; calCache={};
   _pkg=''; _pkgPrice=''; _pkgDesc=''; _pkgDur=60;
   ['bk-pkg','bk-fb','bk-phone','bk-email','bk-notes'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
