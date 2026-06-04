@@ -488,19 +488,28 @@ function gasCall(action, payload) {
     if (!GAS_URL) { reject(new Error('No server URL')); return; }
     var obj = { action: action, payload: payload || {} };
     var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
-    var url = GAS_URL + '?d=' + encodeURIComponent(b64);
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
-    xhr.timeout = 20000;
-    xhr.onload = function() {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try { resolve(JSON.parse(xhr.responseText)); }
-        catch(e) { reject(new Error('Invalid response')); }
-      } else { reject(new Error('HTTP ' + xhr.status)); }
+    // Use JSONP for better cross-origin compatibility
+    var cbName = '_bk_cb_' + Math.random().toString(36).slice(2);
+    var timer = setTimeout(function() {
+      delete window[cbName];
+      try { document.body.removeChild(sc); } catch(e) {}
+      reject(new Error('Timed out'));
+    }, 45000);
+    window[cbName] = function(data) {
+      clearTimeout(timer);
+      delete window[cbName];
+      try { document.body.removeChild(sc); } catch(e) {}
+      resolve(data);
     };
-    xhr.onerror = function() { reject(new Error('Network error')); };
-    xhr.ontimeout = function() { reject(new Error('Timed out')); };
-    xhr.send();
+    var sc = document.createElement('script');
+    sc.src = GAS_URL + '?d=' + encodeURIComponent(b64) + '&callback=' + cbName;
+    sc.onerror = function() {
+      clearTimeout(timer);
+      delete window[cbName];
+      try { document.body.removeChild(sc); } catch(e) {}
+      reject(new Error('Network error'));
+    };
+    document.body.appendChild(sc);
   });
 }
 
@@ -758,58 +767,90 @@ function pickDate(ds) {
     slotsNote.style.display = 'none';
   }
 
-  // Derive taken slots from already-loaded calendar events for this date.
-  // getBookedSlots has no Apps Script handler in the POS — use calendar events instead.
-  // If data isn't loaded yet, fetch it first.
-  function buildTakenSlots() {
-    var taken = [];
-    txCache.forEach(function(ev) {
-      var evDate = String(ev.start || '').slice(0,10);
-      if (evDate !== ds) return;
-      if (/\[BLOCKED\]/i.test(ev.title||'')) {
-        // Full-day or time-specific block — add all slots or the specific time
-        var evTime = ev.timeSlot || ev.time || '';
-        if (!evTime) { ALL_SLOTS.forEach(function(s){ if(taken.indexOf(s)===-1) taken.push(s); }); }
-        else if (taken.indexOf(evTime)===-1) taken.push(evTime);
-        return;
-      }
-      var status = (ev.status||'').toLowerCase();
-      if (status === 'cancelled') return;
-      var t = (ev.timeSlot || ev.time || '').trim();
-      if (t && taken.indexOf(t) === -1) taken.push(t);
-    });
-    return taken;
-  }
+  // Fetch taken slots directly from Bookings sheet via getBookedSlots
+  // This is the most reliable source — checks the sheet before calendar
+  document.getElementById('slots-loading').style.display = '';
+  document.getElementById('slots-loading').textContent = '⏳ Checking availability…';
+  document.getElementById('slots-wrap').style.display = 'none';
 
-  if (calCache[calY + '-' + calM]) {
-    takenSlots = buildTakenSlots();
-    document.getElementById('slots-loading').style.display = 'none';
-    renderSlots();
-  } else {
-    // Data not cached yet — fetch this month's events first
-    var key = calY + '-' + calM;
-    gasCall('getCalendarEvents', { year: calY, month: calM })
-      .then(function(res) {
-        var events = Array.isArray(res.events) ? res.events : [];
-        calCache[key] = events;
-        txCache = events;
-        blockedDates = txCache
-          .filter(function(ev){ return /\[BLOCKED\]/i.test(ev.title||''); })
-          .map(function(ev){ return String(ev.start||'').slice(0,10); });
-        buildAvailMap(); renderCal();
-        takenSlots = buildTakenSlots();
-        document.getElementById('slots-loading').style.display = 'none';
-        renderSlots();
-      })
-      .catch(function() {
-        takenSlots = [];
-        document.getElementById('slots-loading').style.display = 'none';
-        renderSlots();
-        document.getElementById('slots-note').textContent =
-          '⚠ Could not load live availability. All slots shown — we will verify when you submit.';
-        document.getElementById('slots-note').style.display = '';
+  gasCall('getBookedSlots', { date: ds })
+    .then(function(res) {
+      takenSlots = [];
+
+      if (res.ok) {
+        // Primary: slots from Bookings sheet
+        takenSlots = Array.isArray(res.takenSlots) ? res.takenSlots : [];
+      }
+
+      // Secondary: also add any [BLOCKED] calendar events for this date
+      txCache.forEach(function(ev) {
+        var evDate = String(ev.start || '').slice(0,10);
+        if (evDate !== ds) return;
+        if (!/\[BLOCKED\]/i.test(ev.title||'')) return;
+        // Full-day block: take all slots
+        ALL_SLOTS.forEach(function(s){ if(takenSlots.indexOf(s)===-1) takenSlots.push(s); });
       });
-  }
+
+      // Tertiary: extract time from calendar event start timestamps for pending/confirmed events
+      // (catches cases where a booking was made but isn't in the Bookings sheet yet)
+      txCache.forEach(function(ev) {
+        var evDate = String(ev.start || '').slice(0,10);
+        if (evDate !== ds) return;
+        if (/\[BLOCKED\]/i.test(ev.title||'')) return;
+        var status = (ev.status||'').toLowerCase();
+        if (status === 'cancelled') return;
+
+        // Try to extract time from ISO start
+        var evTime = '';
+        if (ev.start) {
+          try {
+            var dd = new Date(ev.start);
+            evTime = dd.toLocaleTimeString('en-PH', {
+              hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila'
+            });
+          } catch(e) {}
+        }
+        // Also try description
+        if (!evTime) {
+          var tmMatch = (ev.description||'').match(/Time:\s*(.+)/i);
+          if (tmMatch) evTime = tmMatch[1].trim();
+        }
+        if (evTime && takenSlots.indexOf(evTime) === -1) {
+          takenSlots.push(evTime);
+        }
+      });
+
+      document.getElementById('slots-loading').style.display = 'none';
+      renderSlots();
+    })
+    .catch(function(err) {
+      // Fallback: use calendar events only
+      takenSlots = [];
+      txCache.forEach(function(ev) {
+        var evDate = String(ev.start || '').slice(0,10);
+        if (evDate !== ds) return;
+        if (/\[BLOCKED\]/i.test(ev.title||'')) {
+          ALL_SLOTS.forEach(function(s){ if(takenSlots.indexOf(s)===-1) takenSlots.push(s); });
+          return;
+        }
+        var status = (ev.status||'').toLowerCase();
+        if (status === 'cancelled') return;
+        if (ev.start) {
+          try {
+            var dd2 = new Date(ev.start);
+            var t2 = dd2.toLocaleTimeString('en-PH', {
+              hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila'
+            });
+            if (t2 && takenSlots.indexOf(t2) === -1) takenSlots.push(t2);
+          } catch(e2) {}
+        }
+      });
+      document.getElementById('slots-loading').style.display = 'none';
+      renderSlots();
+      var sn = document.getElementById('slots-note');
+      sn.textContent = '⚠ Could not verify live availability. Slots shown may not be 100% accurate.';
+      sn.style.display = '';
+    });
 }
 
 function renderSlots() {
