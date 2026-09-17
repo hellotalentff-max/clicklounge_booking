@@ -213,12 +213,11 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
         </a>
 
         <!-- Package cards for new items go inside this div — pasted from Package Builder -->
-        <div class="pkg-card gold" onclick="selectPkg('The ClickLounge Birthday Excperience','Styleshots? Fur Coat? VS Angel? Build your own birthday portrait package - pick your session, mood and keepsake. ','1200',45)">
-        <div class="pkg-name">The ClickLounge Birthday Excperience <span style="font-size:9px;background:rgba(215,144,104,0.2);color:var(--gold);padding:1px 6px;border-radius:10px;font-weight:600;vertical-align:middle;">HMU</span></div>
-        <div class="pkg-desc">Styleshots? Fur Coat? VS Angel? Build your own birthday portrait package - pick your session, mood and keepsake. </div>
-        <div class="pkg-book">Book Now →</div>
+        <div id="new-pkg-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <!-- ✂ PASTE NEW PACKAGE CARDS HERE ✂ -->
         </div>
       </div>
+
       <script>
         // Auto-show/hide the New & Featured section based on whether there are any cards inside
         (function(){
@@ -283,7 +282,7 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
         </div>
         <div class="pkg-card gold" onclick="selectPkg('Radiant Mama - Glowing Mom','Maternity + HMU · ~1 hr shoot','4500',90)">
           <div class="pkg-name">Radiant Mama — Glowing Mom <span style="font-size:9px;background:rgba(215,144,104,0.2);color:var(--gold);padding:1px 6px;border-radius:10px;font-weight:600;vertical-align:middle;">HMU</span></div>
-          <div class="pkg-desc">Maternity + Hair &amp; Makeup · ₱5,500 · arrive 1.5 hrs early</div><div class="pkg-book">Book Now →</div>
+          <div class="pkg-desc">Maternity + Hair &amp; Makeup · ₱4,500 · arrive 1.5 hrs early</div><div class="pkg-book">Book Now →</div>
         </div>
         <div class="pkg-card gold" onclick="selectPkg('Candid Kids','Kids 1-10yo · from ₱1,500','1500',60)">
           <div class="pkg-name">Candid Kids</div><div class="pkg-desc">Kids 1-10yo · from ₱1,500</div><div class="pkg-book">Book Now →</div>
@@ -383,7 +382,6 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
           <label for="bk-email">Email Address *</label>
           <input type="email" id="bk-email" placeholder="email@example.com" autocomplete="off">
           <div class="err-msg" id="err-email">Please enter a valid email address.</div>
-          <div class="field-hint">This is where we'll send your photo drive link — please use a valid Gmail or Yahoo email address.</div>
         </div>
       </div>
 
@@ -436,7 +434,7 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
       </div>
       <div class="pay-method">
         <div class="pay-icon">&#128181;</div>
-        <div><div class="pay-name">Cash</div><div class="pay-detail">Pay in person at the studio within 4 hours</div>
+        <div><div class="pay-name">Cash</div><div class="pay-detail">Pay in person at the studio</div><div class="pay-sub">Bring exact amount on session day</div></div>
       </div>
     </div>
 
@@ -479,7 +477,7 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
     <div class="instruction-box">
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--teal);font-weight:700;margin-bottom:12px;">Next Steps — Complete Within 4 Hours</div>
       <div class="step-item"><div class="step-num">1</div><div><strong>Screenshot this page</strong> as your booking reference.</div></div>
-      <div class="step-item"><div class="step-num">2</div><div>Send <strong>&#8369;300 downpayment</strong> via GCash, BPI, or Cash (within 4 hours).</div></div>
+      <div class="step-item"><div class="step-num">2</div><div>Send <strong>&#8369;300 downpayment</strong> via GCash, BPI, or Cash.</div></div>
       <div class="step-item"><div class="step-num">3</div><div><strong>Screenshot your payment receipt.</strong></div></div>
       <div class="step-item"><div class="step-num">4</div><div>Message us on <strong>Facebook</strong> and send both screenshots — this booking page and your payment proof.</div></div>
       <div class="step-item"><div class="step-num">5</div><div>We will send your <strong>Acknowledgement Receipt</strong> via Messenger once confirmed.</div></div>
