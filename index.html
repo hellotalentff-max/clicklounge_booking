@@ -193,12 +193,12 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
       <div class="card-title">Choose Your Package</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Tap a package card to continue.</p>
 
-      <!-- ════ ✨ NEW & FEATURED PACKAGES ════ -->
+      <!-- ════ ✨ NEW & JUST LAUNCHED ════ -->
       <!-- Add packages built in Package Builder here. To attach a poster,
            update the src of #new-pkg-poster below. Section auto-hides when empty. -->
-      <div id="new-pkg-section" style="display:none;margin-bottom:22px;">
+      <div id="new-pkg-section" style="margin-bottom:22px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);font-weight:700;">✨ New & Featured</div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);font-weight:700;">✨ New &amp; Just Launched</div>
           <span style="background:linear-gradient(135deg,#d79068,#c07050);color:white;font-size:8px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:1px;">JUST LAUNCHED</span>
         </div>
 
@@ -215,6 +215,16 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
         <!-- Package cards for new items go inside this div — pasted from Package Builder -->
         <div id="new-pkg-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <!-- ✂ PASTE NEW PACKAGE CARDS HERE ✂ -->
+          <!--
+            TODO: this href is a placeholder. Replace it with the real
+            GitHub Pages URL for "The ClickLounge Birthday Experience"
+            mood-board builder once that repo is published.
+          -->
+          <div class="pkg-card gold" style="grid-column:1 / -1;" onclick="window.location.href='https://hellotalentff-max.github.io/clicklounge_birthday/'">
+            <div class="pkg-name">The ClickLounge Birthday Experience</div>
+            <div class="pkg-desc">Styleshots? Fur Coat? VS Angel? Build your own birthday portrait package — pick your session, mood, and keepsake.</div>
+            <div class="pkg-book">Build My Package →</div>
+          </div>
         </div>
       </div>
 
@@ -656,13 +666,19 @@ function hasHMU(pkg) {
   var p = new URLSearchParams(window.location.search);
   var pkg   = p.get('pkg') || p.get('package') || '';
   var price = p.get('price') || '';
+  var desc  = p.get('desc') || '';
   if (!pkg) return;
   var pl  = pkg.toLowerCase();
   var dur = 60;
   if (/(promo styleshots|couple styleshots promo|glowing mom|vip grad glam)/.test(pl)) dur = 90;  // HMU
   else if (/(bridal|pawsome|fam vibes|all star|studio booth)/.test(pl))                  dur = 120;
   else if (/(snapshot|tribe|crew|crowd|frenzy|party|click capture|cap and gown)/.test(pl)) dur = 30;
-  setTimeout(function(){ selectPkg(decodeURIComponent(pkg), '', price, dur); }, 100);
+  // Explicit ?dur= (minutes) overrides the name-based guess above — used by
+  // the ClickLounge Birthday Experience mood-board builder, which knows its
+  // own session length exactly.
+  var durParam = parseInt(p.get('dur'), 10);
+  if (!isNaN(durParam) && durParam > 0) dur = durParam;
+  setTimeout(function(){ selectPkg(decodeURIComponent(pkg), decodeURIComponent(desc), price, dur); }, 100);
 })();
 
 // ════════════════════════════════════════════════
