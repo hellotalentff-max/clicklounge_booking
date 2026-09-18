@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -270,21 +271,6 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
 
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);font-weight:600;margin-bottom:10px;">🎬 Photographer Sessions</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">
-        <div class="pkg-card teal" onclick="selectPkg('Luxe Mode (Fur Coat w Photographer)','Styleshots package with the free use of the timeless and elegant fur coat','3500',60)">
-          <div class="pkg-name">Luxe Mode (Fur Coat w Photographer) <span style="font-size:9px;background:rgba(215,144,104,0.2);color:var(--gold);padding:1px 6px;border-radius:10px;font-weight:600;vertical-align:middle;">HMU</span></div>
-          <div class="pkg-desc">Styleshots package with the free use of the timeless and elegant fur coat</div>
-          <div class="pkg-book">Book Now →</div>
-        </div>
-        <div class="pkg-card teal" onclick="selectPkg('Prestige Mode','All in Fur Coat shoot: outfit, HMU, guided shoot, 8x24" print','5000',60)">
-          <div class="pkg-name">Prestige Mode <span style="font-size:9px;background:rgba(215,144,104,0.2);color:var(--gold);padding:1px 6px;border-radius:10px;font-weight:600;vertical-align:middle;">HMU</span></div>
-          <div class="pkg-desc">All in Fur Coat shoot: outfit, HMU, guided shoot, 8x24" print</div>
-          <div class="pkg-book">Book Now →</div>
-        </div>
-        <div class="pkg-card teal" onclick="selectPkg('Angelic Muse','Create your VS Angel Model dream.','3500',60)">
-          <div class="pkg-name">Angelic Muse <span style="font-size:9px;background:rgba(215,144,104,0.2);color:var(--gold);padding:1px 6px;border-radius:10px;font-weight:600;vertical-align:middle;">HMU</span></div>
-          <div class="pkg-desc">Create your VS Angel Model dream.</div>
-          <div class="pkg-book">Book Now →</div>
-        </div>
         <div class="pkg-card gold" onclick="selectPkg('Styleshots','Solo portrait · ~1 hr','1500',60)">
           <div class="pkg-name">Styleshots</div><div class="pkg-desc">Solo portrait · from ₱1,500</div><div class="pkg-book">Book Now →</div>
         </div>
@@ -588,6 +574,19 @@ var SLOT_CAP  = 2; // max concurrent bookings per slot
 // ════════════════════════════════════════════════
 var selDate = '', selSlot = '', takenSlots = [];
 var _pkg = '', _pkgPrice = '', _pkgDesc = '', _pkgDur = 60;
+
+// Compact record name for the calendar/booking record — combines the short
+// package tag (e.g. "CBE" from the birthday builder), its price, and the
+// client's name once they've entered it: "CBE - ₱9,500 - Juana Dela Cruz".
+// Computed fresh each time (never overwrites _pkg) so re-visiting Screen 3
+// to edit the name never double-appends.
+function pkgRecordName() {
+  var nameEl = document.getElementById('bk-fb');
+  var clientName = nameEl ? nameEl.value.trim() : '';
+  var priceLabel = _pkgPrice ? ('₱' + parseInt(_pkgPrice).toLocaleString()) : '';
+  return [_pkg, priceLabel, clientName].filter(Boolean).join(' - ');
+}
+
 var calY = 0, calM = 0;
 var availMap = {}, txCache = [], blockedDates = [];
 var calCache = {};
@@ -1065,13 +1064,13 @@ function validateInfo() {
 function buildConfirm() {
   var d = phDate(selDate);
   var dateLabel = d.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric',timeZone:'Asia/Manila'});
-  document.getElementById('sm-pkg').textContent   = _pkg + (_pkgPrice ? ' — &#8369;' + parseInt(_pkgPrice).toLocaleString() : '');
+  document.getElementById('sm-pkg').textContent   = pkgRecordName();
   document.getElementById('sm-date').textContent  = dateLabel;
   document.getElementById('sm-time').textContent  = selSlot;
   document.getElementById('sm-name').textContent  = document.getElementById('bk-fb').value.trim();
   document.getElementById('sm-phone').textContent = document.getElementById('bk-phone').value.trim();
   document.getElementById('sm-email').textContent = document.getElementById('bk-email').value.trim();
-  var notes = [getExtraNotes(), document.getElementById('bk-notes').value.trim()].filter(Boolean).join(' | ');
+  var notes = [_pkgDesc, getExtraNotes(), document.getElementById('bk-notes').value.trim()].filter(Boolean).join(' | ');
   if (notes) { document.getElementById('sm-notes').textContent=notes; document.getElementById('sm-notes-row').style.display='flex'; }
   else        { document.getElementById('sm-notes-row').style.display='none'; }
 }
@@ -1097,12 +1096,12 @@ function submitBooking() {
   var errEl = document.getElementById('submit-err');
   btn.disabled=true; btn.textContent='Booking…'; errEl.style.display='none';
 
-  var notes = [getExtraNotes(), document.getElementById('bk-notes').value.trim()].filter(Boolean).join(' | ');
+  var notes = [_pkgDesc, getExtraNotes(), document.getElementById('bk-notes').value.trim()].filter(Boolean).join(' | ');
   var payload = {
     fbName:      document.getElementById('bk-fb').value.trim(),
     phone:       document.getElementById('bk-phone').value.trim(),
     email:       document.getElementById('bk-email').value.trim(),
-    package:     _pkg,
+    package:     pkgRecordName(),
     price:       _pkgPrice,
     date:        selDate,
     timeSlot:    selSlot,
