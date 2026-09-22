@@ -1057,7 +1057,7 @@ function goSc(n) {
 // ════════════════════════════════════════════════
 // 👗 DRESS — pick a House of Roan gown for the chosen date
 // ════════════════════════════════════════════════
-function dressEligible() { return !!DRESS_API && !!_pkg && NO_DRESS_PKGS.indexOf(_pkg) === -1; }
+function dressEligible() { return !!DRESS_API && !!_pkg && NO_DRESS_PKGS.indexOf(_pkg) === -1 && !/Birthday Experience/i.test(_pkg); }   // CBE picks its gown on the CBE page
 function dressCo() { return /prestige/i.test(_pkg) ? 'CLS Prestige' : 'CLS Photographer'; }
 function dressEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function dressSlug(n) { return String(n||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
