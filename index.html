@@ -239,13 +239,13 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
           <!-- ✂ PASTE NEW PACKAGE CARDS HERE ✂ -->
           <!--
             TODO: this href is a placeholder. Replace it with the real
-            GitHub Pages URL for "The ClickLounge Birthday Experience"
+            GitHub Pages URL for "The Look Lab"
             mood-board builder once that repo is published.
           -->
           <div class="pkg-card gold" style="grid-column:1 / -1;" onclick="window.location.href='https://hellotalentff-max.github.io/clicklounge_birthday/'">
-            <div class="pkg-name">The ClickLounge Birthday Experience</div>
-            <div class="pkg-desc">Styleshots? Fur Coat? VS Angel? Build your own birthday portrait package — pick your session, mood, and keepsake.</div>
-            <div class="pkg-book">Build My Package →</div>
+            <div class="pkg-name">The Look Lab</div>
+            <div class="pkg-desc">Styleshots? Fur coat? Angel wings? Build your own portrait session — pick your session, mood, gown and keepsake.</div>
+            <div class="pkg-book">Build My Look →</div>
           </div>
         </div>
       </div>
@@ -1057,7 +1057,7 @@ function goSc(n) {
 // ════════════════════════════════════════════════
 // 👗 DRESS — pick a House of Roan gown for the chosen date
 // ════════════════════════════════════════════════
-function dressEligible() { return !!DRESS_API && !!_pkg && NO_DRESS_PKGS.indexOf(_pkg) === -1 && !/Birthday Experience/i.test(_pkg); }   // CBE picks its gown on the CBE page
+function dressEligible() { return !!DRESS_API && !!_pkg && NO_DRESS_PKGS.indexOf(_pkg) === -1 && !/(Birthday Experience|Look Lab)/i.test(_pkg); }   // the Look Lab picks its gown on its own page
 function dressCo() { return /prestige/i.test(_pkg) ? 'CLS Prestige' : 'CLS Photographer'; }
 function dressEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function dressSlug(n) { return String(n||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
