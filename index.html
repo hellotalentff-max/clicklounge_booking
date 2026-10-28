@@ -155,6 +155,15 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
 /* ── PAYMENT ── */
 .pp-m{flex:1;padding:11px 8px;border:1.5px solid var(--light2);background:var(--light);color:var(--muted);border-radius:10px;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;}
 .pp-m.on{border-color:var(--teal);background:rgba(81,137,125,.1);color:var(--teal);}
+/* Look Lab prep: sizes + look photos, sent after booking */
+.lp-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.lp-chip{padding:8px 12px;border:1.5px solid var(--light2);background:var(--light);color:var(--muted);border-radius:999px;font-size:12px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;}
+.lp-chip.on{border-color:var(--teal);background:rgba(81,137,125,.1);color:var(--teal);}
+.lp-drop{display:block;border:2px dashed rgba(81,137,125,.45);border-radius:12px;padding:16px;text-align:center;font-size:13px;font-weight:600;color:var(--teal);cursor:pointer;background:rgba(81,137,125,.04);}
+.lp-thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px;}
+.lp-thumb{position:relative;aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:var(--light2);}
+.lp-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.lp-thumb button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:11px;cursor:pointer;line-height:22px;padding:0;}
 .pay-box{background:var(--white);border:1.5px solid rgba(215,144,104,.3);border-radius:12px;padding:18px;margin-bottom:14px;}
 .pay-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);font-weight:700;margin-bottom:12px;}
 .pay-amount{font-size:22px;font-weight:700;color:var(--slate);margin-bottom:14px;text-align:center;padding:10px;background:var(--light);border-radius:8px;}
@@ -577,6 +586,38 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
         <div style="font-size:30px;margin-bottom:6px;">&#9989;</div>
         <div style="font-size:14px;font-weight:700;color:var(--slate);margin-bottom:6px;">Payment details received</div>
         <div style="font-size:12px;color:var(--muted);line-height:1.7;">We'll check it against our records and send your <strong>Acknowledgement Receipt</strong> once confirmed. You don't need to send a screenshot.</div>
+      </div>
+    </div>
+    <!-- ════ LOOK LAB PREP — sizes and look photos, asked for after booking ════ -->
+    <div class="card" id="lp-card" style="display:none;border-color:rgba(215,144,104,.5);">
+      <div class="card-title">Help Us Prepare Your Look</div>
+      <div id="lp-form">
+        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin:0 0 14px;">Send your sizes and a few photos of the look you're aiming for, so we can prepare your outfit, gown and set before your session.</p>
+        <div class="field"><label>Top size *</label><div class="lp-chips" data-k="top"></div></div>
+        <div class="field"><label>Bottom size *</label><div class="lp-chips" data-k="bottom"></div></div>
+        <div class="field"><label>Shoe size (EU) *</label><div class="lp-chips" data-k="shoe"></div></div>
+        <div class="field">
+          <label>Photos of the look you're aiming for (up to 4)</label>
+          <label class="lp-drop" for="lp-files">&#128247; Tap to add photos</label>
+          <input type="file" id="lp-files" accept="image/*" multiple style="display:none;" onchange="lpAddFiles(this.files);this.value='';">
+          <div class="lp-thumbs" id="lp-thumbs"></div>
+        </div>
+        <div class="field">
+          <label for="lp-links">Or paste links (Pinterest, Instagram, Drive)</label>
+          <textarea id="lp-links" rows="2" placeholder="https://…" style="width:100%;"></textarea>
+        </div>
+        <div class="field" id="lp-phone-wrap" style="display:none;">
+          <label for="lp-phone">Mobile Number *</label>
+          <input type="tel" id="lp-phone" placeholder="09XXXXXXXXX" autocomplete="tel">
+        </div>
+        <div class="err-msg" id="lp-err" style="margin:10px 0;"></div>
+        <button class="btn-main" id="lp-btn" onclick="submitLookPrep()">Send My Sizes &amp; Photos</button>
+        <div class="field-hint" style="text-align:center;margin-top:8px;">Not ready? You can send them later on Facebook Messenger.</div>
+      </div>
+      <div id="lp-done" style="display:none;text-align:center;padding:6px 0;">
+        <div style="font-size:30px;margin-bottom:6px;">&#9989;</div>
+        <div style="font-size:14px;font-weight:700;color:var(--slate);margin-bottom:6px;">Thanks, we have your sizes and look</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;">Your stylist will use them to prepare for your session.</div>
       </div>
     </div>
     <div class="alert-box">&#9888; <strong>Reminder:</strong> Non-payment within <strong>4 hours</strong> will release this slot. Your booking is only confirmed once we receive and verify your payment details (above, or via Facebook Messenger).</div>
@@ -1265,6 +1306,7 @@ function submitBooking() {
     else if (dressRes && dressRes.ok) dd.innerHTML = '<div class="dress-warn" style="background:rgba(81,137,125,.07);border-color:rgba(81,137,125,.3);color:var(--slate);">&#128087; <strong>' + dressEsc(payload.dress) + '</strong> is held for you and will be confirmed together with your booking.</div>';
     else dd.innerHTML = '<div class="dress-warn">&#128087; Sorry — <strong>' + dressEsc(payload.dress) + '</strong> was booked by someone else a moment ago. Your session is still reserved; message us and we\'ll help you choose another gown.</div>';
     _pp.booking = { ref: ref, fbName: payload.fbName, date: selDate, slot: selSlot, pkg: payload.package };
+    lpShow({ ref: ref, fbName: payload.fbName, phone: payload.phone, email: payload.email, pkg: payload.package, price: payload.price, date: selDate, slot: selSlot });
     document.getElementById('pp-form').style.display = ''; document.getElementById('pp-done').style.display = 'none';
     ppReset();
     document.getElementById('pp-btn').disabled = false; document.getElementById('pp-btn').textContent = 'Send Payment Details';
@@ -1393,6 +1435,109 @@ function submitPaymentProof() {
     err.textContent = 'Connection problem. Please try again, or message us your receipt on Facebook.';
     err.style.display = 'block';
   });
+}
+
+// ════════════════════════════════════════════════
+// LOOK LAB PREP — sizes + look photos, sent after booking
+// Saved through the same saveLookLabInquiry action the Find My Look quiz uses,
+// so they land in the "Look Lab Inquiries" tab and the photos in Drive.
+// ════════════════════════════════════════════════
+var LP_SIZES = ['XS','S','M','L','XL','XXL','3XL','Not sure'];
+var LP_SHOES = ['35','36','37','38','39','40','41','42','43','44','Not sure'];
+var LP_MAX = 4;
+var _lp = { booking: null, top: '', bottom: '', shoe: '', photos: [] };
+function lpShow(b) {
+  var card = document.getElementById('lp-card');
+  if (!/^the look lab/i.test(b.pkg || '')) { card.style.display = 'none'; _lp.booking = null; return; }
+  _lp = { booking: b, top: '', bottom: '', shoe: '', photos: [] };
+  Array.prototype.forEach.call(document.querySelectorAll('.lp-chips'), function (box) {
+    var k = box.getAttribute('data-k'), opts = k === 'shoe' ? LP_SHOES : LP_SIZES;
+    box.innerHTML = opts.map(function (o) {
+      return '<button type="button" class="lp-chip" data-v="' + o + '" onclick="lpPick(\'' + k + '\',\'' + o + '\')">' + (k === 'shoe' && o !== 'Not sure' ? 'EU ' + o : o) + '</button>';
+    }).join('');
+  });
+  document.getElementById('lp-links').value = '';
+  document.getElementById('lp-phone').value = '';
+  document.getElementById('lp-phone-wrap').style.display = lpPhone(b.phone) ? 'none' : '';
+  document.getElementById('lp-err').style.display = 'none';
+  document.getElementById('lp-form').style.display = ''; document.getElementById('lp-done').style.display = 'none';
+  document.getElementById('lp-btn').disabled = false; document.getElementById('lp-btn').textContent = 'Send My Sizes & Photos';
+  lpThumbs();
+  card.style.display = '';
+}
+// The studio's sheet wants a PH mobile number as 09XXXXXXXXX
+function lpPhone(v) {
+  var d = String(v || '').replace(/\D/g, '');
+  if (/^639\d{9}$/.test(d)) d = '0' + d.slice(2);
+  return /^09\d{9}$/.test(d) ? d : '';
+}
+function lpPick(k, v) {
+  _lp[k] = v;
+  document.getElementById('lp-err').style.display = 'none';
+  Array.prototype.forEach.call(document.querySelectorAll('.lp-chips[data-k="' + k + '"] .lp-chip'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === v); });
+}
+function lpThumbs() {
+  document.getElementById('lp-thumbs').innerHTML = _lp.photos.map(function (d, i) {
+    return '<div class="lp-thumb"><img src="' + d + '" alt="Look photo ' + (i + 1) + '"><button type="button" aria-label="Remove photo" onclick="lpRemove(' + i + ')">&#10005;</button></div>';
+  }).join('');
+}
+function lpRemove(i) { _lp.photos.splice(i, 1); lpThumbs(); }
+// Shrink each photo to at most 1400px JPEG so the upload stays small on mobile data
+function lpAddFiles(files) {
+  var room = LP_MAX - _lp.photos.length, list = Array.prototype.slice.call(files || [], 0, Math.max(0, room));
+  var err = document.getElementById('lp-err');
+  if (!list.length) { if (room <= 0) { err.textContent = 'You can add up to ' + LP_MAX + ' photos.'; err.style.display = 'block'; } return; }
+  err.style.display = 'none';
+  list.forEach(function (f) {
+    if (!/^image\//.test(f.type)) return;
+    var r = new FileReader();
+    r.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var sc = Math.min(1, 1400 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        if (_lp.photos.length < LP_MAX) { _lp.photos.push(c.toDataURL('image/jpeg', 0.82)); lpThumbs(); }
+      };
+      img.src = r.result;
+    };
+    r.readAsDataURL(f);
+  });
+}
+function lpId() {
+  var a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s = 'LL-';
+  for (var i = 0; i < 6; i++) s += a.charAt(Math.floor(Math.random() * a.length));
+  return s;
+}
+function submitLookPrep() {
+  var b = _lp.booking, err = document.getElementById('lp-err'), btn = document.getElementById('lp-btn');
+  err.style.display = 'none';
+  if (!b) return;
+  if (!_lp.top || !_lp.bottom || !_lp.shoe) { err.textContent = 'Please pick your top, bottom and shoe size (or \u201cNot sure\u201d).'; err.style.display = 'block'; return; }
+  var phone = lpPhone(b.phone) || lpPhone(document.getElementById('lp-phone').value);
+  if (!phone) { document.getElementById('lp-phone-wrap').style.display = ''; err.textContent = 'Please enter your mobile number (09XXXXXXXXX).'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = _lp.photos.length ? 'Sending photos\u2026' : 'Sending\u2026';
+  var payload = {
+    id: lpId(), name: b.fbName, fbName: b.fbName, phone: phone, email: b.email,
+    build: b.pkg, total: b.price,
+    sizes: { top: _lp.top, bottom: _lp.bottom, shoe: _lp.shoe },
+    links: document.getElementById('lp-links').value.trim(),
+    notes: 'Sent after booking ' + b.ref + ' \u00B7 session ' + b.date + ' ' + b.slot,
+    images: _lp.photos.map(function (d, i) { return { name: 'look-' + (i + 1) + '.jpg', mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }; })
+  };
+  // POST, not the usual JSONP: photos are far too big to fit in a URL
+  fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveLookLabInquiry', payload: payload }) })
+    .then(function (r) { return r.text(); })
+    .then(function (t) {
+      var j; try { j = JSON.parse(t); } catch (e) { j = null; }
+      if (j && j.ok) { document.getElementById('lp-form').style.display = 'none'; document.getElementById('lp-done').style.display = ''; return; }
+      throw new Error((j && j.error) || 'not saved');
+    })
+    .catch(function () {
+      btn.disabled = false; btn.textContent = 'Send My Sizes & Photos';
+      err.textContent = 'We couldn\u2019t send that just now. Please try again, or send your sizes and photos to us on Facebook Messenger.';
+      err.style.display = 'block';
+    });
 }
 
 // ════════════════════════════════════════════════
