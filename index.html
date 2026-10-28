@@ -163,6 +163,7 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
 .lp-thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px;}
 .lp-thumb{position:relative;aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:var(--light2);}
 .lp-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.lp-gown-link{display:block;text-align:center;padding:12px;border-radius:10px;background:rgba(215,144,104,.12);color:#9c6140;font-weight:700;font-size:13px;text-decoration:none;margin:4px 0 10px;}
 .lp-thumb button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:11px;cursor:pointer;line-height:22px;padding:0;}
 .pay-box{background:var(--white);border:1.5px solid rgba(215,144,104,.3);border-radius:12px;padding:18px;margin-bottom:14px;}
 .pay-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);font-weight:700;margin-bottom:12px;}
@@ -592,10 +593,18 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
     <div class="card" id="lp-card" style="display:none;border-color:rgba(215,144,104,.5);">
       <div class="card-title">Help Us Prepare Your Look</div>
       <div id="lp-form">
-        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin:0 0 14px;">Send your sizes and a few photos of the look you're aiming for, so we can prepare your outfit, gown and set before your session.</p>
-        <div class="field"><label>Top size *</label><div class="lp-chips" data-k="top"></div></div>
-        <div class="field"><label>Bottom size *</label><div class="lp-chips" data-k="bottom"></div></div>
-        <div class="field"><label>Shoe size (EU) *</label><div class="lp-chips" data-k="shoe"></div></div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin:0 0 14px;" id="lp-intro">Tell us your shoes and send a few photos of the look you're aiming for, so we can prepare your set before your session.</p>
+        <div class="field" id="lp-gown-wrap" style="display:none;">
+          <label for="lp-gown">Your gown (included with Prestige)</label>
+          <div class="field-hint" style="margin:0 0 6px;">Browse the gowns, then type the name of the one you'd like. We'll confirm it's free on your date.</div>
+          <a class="lp-gown-link" id="lp-gown-link" href="#" target="_blank" rel="noopener">&#128087; Browse the gowns &rarr;</a>
+          <input type="text" id="lp-gown" placeholder="Gown name, e.g. Amelia" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Shoes *</label>
+          <div class="lp-chips" data-k="shoe"></div>
+          <div class="field-hint">We have studio shoes in these sizes. Pick one, or bring your own.</div>
+        </div>
         <div class="field">
           <label>Photos of the look you're aiming for (up to 4)</label>
           <label class="lp-drop" for="lp-files">&#128247; Tap to add photos</label>
@@ -611,12 +620,12 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
           <input type="tel" id="lp-phone" placeholder="09XXXXXXXXX" autocomplete="tel">
         </div>
         <div class="err-msg" id="lp-err" style="margin:10px 0;"></div>
-        <button class="btn-main" id="lp-btn" onclick="submitLookPrep()">Send My Sizes &amp; Photos</button>
+        <button class="btn-main" id="lp-btn" onclick="submitLookPrep()">Send to the Studio</button>
         <div class="field-hint" style="text-align:center;margin-top:8px;">Not ready? You can send them later on Facebook Messenger.</div>
       </div>
       <div id="lp-done" style="display:none;text-align:center;padding:6px 0;">
         <div style="font-size:30px;margin-bottom:6px;">&#9989;</div>
-        <div style="font-size:14px;font-weight:700;color:var(--slate);margin-bottom:6px;">Thanks, we have your sizes and look</div>
+        <div style="font-size:14px;font-weight:700;color:var(--slate);margin-bottom:6px;">Thanks, we have your details</div>
         <div style="font-size:12px;color:var(--muted);line-height:1.7;">Your stylist will use them to prepare for your session.</div>
       </div>
     </div>
@@ -1442,26 +1451,32 @@ function submitPaymentProof() {
 // Saved through the same saveLookLabInquiry action the Find My Look quiz uses,
 // so they land in the "Look Lab Inquiries" tab and the photos in Drive.
 // ════════════════════════════════════════════════
-var LP_SIZES = ['XS','S','M','L','XL','XXL','3XL','Not sure'];
-var LP_SHOES = ['35','36','37','38','39','40','41','42','43','44','Not sure'];
+// The studio's own shoes. Edit this list when pairs change.
+var LP_SHOES = ['Size 6 \u00B7 Beige', 'Size 7 \u00B7 Black', 'Size 9 \u00B7 Black', 'I\u2019ll bring my own'];
 var LP_MAX = 4;
-var _lp = { booking: null, top: '', bottom: '', shoe: '', photos: [] };
+var _lp = { booking: null, shoe: '', photos: [] };
+// Only Prestige + Styleshots picks a gown here; Coat Code, Angelic Muse and Twofold come with their outfit.
+function lpWantsGown(pkg) { return /^the look lab:\s*prestige\s*\+\s*styleshots/i.test(pkg || ''); }
 function lpShow(b) {
   var card = document.getElementById('lp-card');
   if (!/^the look lab/i.test(b.pkg || '')) { card.style.display = 'none'; _lp.booking = null; return; }
-  _lp = { booking: b, top: '', bottom: '', shoe: '', photos: [] };
-  Array.prototype.forEach.call(document.querySelectorAll('.lp-chips'), function (box) {
-    var k = box.getAttribute('data-k'), opts = k === 'shoe' ? LP_SHOES : LP_SIZES;
-    box.innerHTML = opts.map(function (o) {
-      return '<button type="button" class="lp-chip" data-v="' + o + '" onclick="lpPick(\'' + k + '\',\'' + o + '\')">' + (k === 'shoe' && o !== 'Not sure' ? 'EU ' + o : o) + '</button>';
-    }).join('');
-  });
+  _lp = { booking: b, shoe: '', photos: [] };
+  document.querySelector('.lp-chips[data-k="shoe"]').innerHTML = LP_SHOES.map(function (o, i) {
+    return '<button type="button" class="lp-chip" data-i="' + i + '" onclick="lpPick(\'shoe\',' + i + ')">' + o + '</button>';
+  }).join('');
+  var gown = lpWantsGown(b.pkg);
+  document.getElementById('lp-gown-wrap').style.display = gown ? '' : 'none';
+  document.getElementById('lp-gown').value = '';
+  document.getElementById('lp-gown-link').href = DRESS_SITE + (b.date ? '?date=' + encodeURIComponent(b.date) : '');
+  document.getElementById('lp-intro').textContent = gown
+    ? 'Choose your gown and shoes, and send a few photos of the look you\u2019re aiming for, so we can prepare everything before your session.'
+    : 'Tell us your shoes and send a few photos of the look you\u2019re aiming for, so we can prepare your set before your session.';
   document.getElementById('lp-links').value = '';
   document.getElementById('lp-phone').value = '';
   document.getElementById('lp-phone-wrap').style.display = lpPhone(b.phone) ? 'none' : '';
   document.getElementById('lp-err').style.display = 'none';
   document.getElementById('lp-form').style.display = ''; document.getElementById('lp-done').style.display = 'none';
-  document.getElementById('lp-btn').disabled = false; document.getElementById('lp-btn').textContent = 'Send My Sizes & Photos';
+  document.getElementById('lp-btn').disabled = false; document.getElementById('lp-btn').textContent = 'Send to the Studio';
   lpThumbs();
   card.style.display = '';
 }
@@ -1471,10 +1486,10 @@ function lpPhone(v) {
   if (/^639\d{9}$/.test(d)) d = '0' + d.slice(2);
   return /^09\d{9}$/.test(d) ? d : '';
 }
-function lpPick(k, v) {
-  _lp[k] = v;
+function lpPick(k, i) {
+  _lp[k] = LP_SHOES[i];
   document.getElementById('lp-err').style.display = 'none';
-  Array.prototype.forEach.call(document.querySelectorAll('.lp-chips[data-k="' + k + '"] .lp-chip'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === v); });
+  Array.prototype.forEach.call(document.querySelectorAll('.lp-chips[data-k="' + k + '"] .lp-chip'), function (b) { b.classList.toggle('on', +b.getAttribute('data-i') === i); });
 }
 function lpThumbs() {
   document.getElementById('lp-thumbs').innerHTML = _lp.photos.map(function (d, i) {
@@ -1513,14 +1528,15 @@ function submitLookPrep() {
   var b = _lp.booking, err = document.getElementById('lp-err'), btn = document.getElementById('lp-btn');
   err.style.display = 'none';
   if (!b) return;
-  if (!_lp.top || !_lp.bottom || !_lp.shoe) { err.textContent = 'Please pick your top, bottom and shoe size (or \u201cNot sure\u201d).'; err.style.display = 'block'; return; }
+  if (!_lp.shoe) { err.textContent = 'Please pick your shoes, or \u201cI\u2019ll bring my own\u201d.'; err.style.display = 'block'; return; }
   var phone = lpPhone(b.phone) || lpPhone(document.getElementById('lp-phone').value);
   if (!phone) { document.getElementById('lp-phone-wrap').style.display = ''; err.textContent = 'Please enter your mobile number (09XXXXXXXXX).'; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = _lp.photos.length ? 'Sending photos\u2026' : 'Sending\u2026';
   var payload = {
     id: lpId(), name: b.fbName, fbName: b.fbName, phone: phone, email: b.email,
     build: b.pkg, total: b.price,
-    sizes: { top: _lp.top, bottom: _lp.bottom, shoe: _lp.shoe },
+    sizes: { shoe: _lp.shoe },
+    gown: lpWantsGown(b.pkg) ? document.getElementById('lp-gown').value.trim() : '',
     links: document.getElementById('lp-links').value.trim(),
     notes: 'Sent after booking ' + b.ref + ' \u00B7 session ' + b.date + ' ' + b.slot,
     images: _lp.photos.map(function (d, i) { return { name: 'look-' + (i + 1) + '.jpg', mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }; })
@@ -1534,8 +1550,8 @@ function submitLookPrep() {
       throw new Error((j && j.error) || 'not saved');
     })
     .catch(function () {
-      btn.disabled = false; btn.textContent = 'Send My Sizes & Photos';
-      err.textContent = 'We couldn\u2019t send that just now. Please try again, or send your sizes and photos to us on Facebook Messenger.';
+      btn.disabled = false; btn.textContent = 'Send to the Studio';
+      err.textContent = 'We couldn\u2019t send that just now. Please try again, or send your shoes and photos to us on Facebook Messenger.';
       err.style.display = 'block';
     });
 }
