@@ -159,12 +159,10 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
 .lp-chips{display:flex;flex-wrap:wrap;gap:6px;}
 .lp-chip{padding:8px 12px;border:1.5px solid var(--light2);background:var(--light);color:var(--muted);border-radius:999px;font-size:12px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;}
 .lp-chip.on{border-color:var(--teal);background:rgba(81,137,125,.1);color:var(--teal);}
-.lp-drop{display:block;border:2px dashed rgba(81,137,125,.45);border-radius:12px;padding:16px;text-align:center;font-size:13px;font-weight:600;color:var(--teal);cursor:pointer;background:rgba(81,137,125,.04);}
-.lp-thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px;}
-.lp-thumb{position:relative;aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:var(--light2);}
-.lp-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.lp-msg{border-radius:12px;background:rgba(81,137,125,.07);border:1px solid rgba(81,137,125,.25);padding:14px;font-size:12.5px;line-height:1.6;color:var(--slate);}
+.lp-msg b{display:block;font-size:13px;margin-bottom:4px;}
+.lp-msgr-btn{display:block;text-align:center;margin-top:10px;padding:11px;border-radius:10px;background:#0084ff;color:#fff;font-weight:700;font-size:13px;text-decoration:none;}
 .lp-gown-link{display:block;text-align:center;padding:12px;border-radius:10px;background:rgba(215,144,104,.12);color:#9c6140;font-weight:700;font-size:13px;text-decoration:none;margin:4px 0 10px;}
-.lp-thumb button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:11px;cursor:pointer;line-height:22px;padding:0;}
 .pay-box{background:var(--white);border:1.5px solid rgba(215,144,104,.3);border-radius:12px;padding:18px;margin-bottom:14px;}
 .pay-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);font-weight:700;margin-bottom:12px;}
 .pay-amount{font-size:22px;font-weight:700;color:var(--slate);margin-bottom:14px;text-align:center;padding:10px;background:var(--light);border-radius:8px;}
@@ -589,14 +587,11 @@ body{font-family:'Poppins',sans-serif;color:var(--text);}
           <div class="field-hint">We have studio shoes in these sizes. Pick one, or bring your own.</div>
         </div>
         <div class="field">
-          <label>Photos of the look you're aiming for (up to 4)</label>
-          <label class="lp-drop" for="lp-files">&#128247; Tap to add photos</label>
-          <input type="file" id="lp-files" accept="image/*" multiple style="display:none;" onchange="lpAddFiles(this.files);this.value='';">
-          <div class="lp-thumbs" id="lp-thumbs"></div>
-        </div>
-        <div class="field">
-          <label for="lp-links">Or paste links (Pinterest, Instagram, Drive)</label>
-          <textarea id="lp-links" rows="2" placeholder="https://…" style="width:100%;"></textarea>
+          <div class="lp-msg">
+            <b>&#128247; Photos of the look you're aiming for</b>
+            Send them to us on Facebook Messenger with your booking reference <strong id="lp-ref"></strong>, so your stylist can prepare.
+            <a class="lp-msgr-btn" id="lp-msgr" href="https://m.me/clicklounge.studio" target="_blank" rel="noopener">Send my photos on Messenger &rarr;</a>
+          </div>
         </div>
         <div class="field" id="lp-phone-wrap" style="display:none;">
           <label for="lp-phone">Mobile Number *</label>
@@ -1436,14 +1431,13 @@ function submitPaymentProof() {
 // ════════════════════════════════════════════════
 // The studio's own shoes. Edit this list when pairs change.
 var LP_SHOES = ['Size 6 \u00B7 Beige', 'Size 7 \u00B7 Black', 'Size 9 \u00B7 Black', 'I\u2019ll bring my own'];
-var LP_MAX = 4;
-var _lp = { booking: null, shoe: '', photos: [] };
+var _lp = { booking: null, shoe: '' };
 // Only Prestige + Styleshots picks a gown here; Coat Code, Angelic Muse and Twofold come with their outfit.
 function lpWantsGown(pkg) { return /^the look lab:\s*prestige\s*\+\s*styleshots/i.test(pkg || ''); }
 function lpShow(b) {
   var card = document.getElementById('lp-card');
   if (!/^the look lab/i.test(b.pkg || '')) { card.style.display = 'none'; _lp.booking = null; return; }
-  _lp = { booking: b, shoe: '', photos: [] };
+  _lp = { booking: b, shoe: '' };
   document.querySelector('.lp-chips[data-k="shoe"]').innerHTML = LP_SHOES.map(function (o, i) {
     return '<button type="button" class="lp-chip" data-i="' + i + '" onclick="lpPick(\'shoe\',' + i + ')">' + o + '</button>';
   }).join('');
@@ -1452,15 +1446,16 @@ function lpShow(b) {
   document.getElementById('lp-gown').value = '';
   document.getElementById('lp-gown-link').href = DRESS_SITE + (b.date ? '?date=' + encodeURIComponent(b.date) : '');
   document.getElementById('lp-intro').textContent = gown
-    ? 'Choose your gown and shoes, and send a few photos of the look you\u2019re aiming for, so we can prepare everything before your session.'
-    : 'Tell us your shoes and send a few photos of the look you\u2019re aiming for, so we can prepare your set before your session.';
-  document.getElementById('lp-links').value = '';
+    ? 'Choose your gown and shoes so we can prepare everything before your session.'
+    : 'Tell us your shoes so we can prepare everything before your session.';
+  document.getElementById('lp-ref').textContent = b.ref;
+  document.getElementById('lp-msgr').href = 'https://m.me/clicklounge.studio?text=' + encodeURIComponent(
+    'Hi ClickLounge Studio! Here are photos of the look I\u2019m aiming for. Booking ref: ' + b.ref + ' (' + b.pkg.replace(/^The Look Lab:\s*/i, 'The Look Lab ') + ', ' + b.date + ' ' + b.slot + ').');
   document.getElementById('lp-phone').value = '';
   document.getElementById('lp-phone-wrap').style.display = lpPhone(b.phone) ? 'none' : '';
   document.getElementById('lp-err').style.display = 'none';
   document.getElementById('lp-form').style.display = ''; document.getElementById('lp-done').style.display = 'none';
   document.getElementById('lp-btn').disabled = false; document.getElementById('lp-btn').textContent = 'Send to the Studio';
-  lpThumbs();
   card.style.display = '';
 }
 // The studio's sheet wants a PH mobile number as 09XXXXXXXXX
@@ -1474,34 +1469,6 @@ function lpPick(k, i) {
   document.getElementById('lp-err').style.display = 'none';
   Array.prototype.forEach.call(document.querySelectorAll('.lp-chips[data-k="' + k + '"] .lp-chip'), function (b) { b.classList.toggle('on', +b.getAttribute('data-i') === i); });
 }
-function lpThumbs() {
-  document.getElementById('lp-thumbs').innerHTML = _lp.photos.map(function (d, i) {
-    return '<div class="lp-thumb"><img src="' + d + '" alt="Look photo ' + (i + 1) + '"><button type="button" aria-label="Remove photo" onclick="lpRemove(' + i + ')">&#10005;</button></div>';
-  }).join('');
-}
-function lpRemove(i) { _lp.photos.splice(i, 1); lpThumbs(); }
-// Shrink each photo to at most 1400px JPEG so the upload stays small on mobile data
-function lpAddFiles(files) {
-  var room = LP_MAX - _lp.photos.length, list = Array.prototype.slice.call(files || [], 0, Math.max(0, room));
-  var err = document.getElementById('lp-err');
-  if (!list.length) { if (room <= 0) { err.textContent = 'You can add up to ' + LP_MAX + ' photos.'; err.style.display = 'block'; } return; }
-  err.style.display = 'none';
-  list.forEach(function (f) {
-    if (!/^image\//.test(f.type)) return;
-    var r = new FileReader();
-    r.onload = function () {
-      var img = new Image();
-      img.onload = function () {
-        var sc = Math.min(1, 1400 / Math.max(img.width, img.height)), c = document.createElement('canvas');
-        c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        if (_lp.photos.length < LP_MAX) { _lp.photos.push(c.toDataURL('image/jpeg', 0.82)); lpThumbs(); }
-      };
-      img.src = r.result;
-    };
-    r.readAsDataURL(f);
-  });
-}
 function lpId() {
   var a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s = 'LL-';
   for (var i = 0; i < 6; i++) s += a.charAt(Math.floor(Math.random() * a.length));
@@ -1514,17 +1481,14 @@ function submitLookPrep() {
   if (!_lp.shoe) { err.textContent = 'Please pick your shoes, or \u201cI\u2019ll bring my own\u201d.'; err.style.display = 'block'; return; }
   var phone = lpPhone(b.phone) || lpPhone(document.getElementById('lp-phone').value);
   if (!phone) { document.getElementById('lp-phone-wrap').style.display = ''; err.textContent = 'Please enter your mobile number (09XXXXXXXXX).'; err.style.display = 'block'; return; }
-  btn.disabled = true; btn.textContent = _lp.photos.length ? 'Sending photos\u2026' : 'Sending\u2026';
+  btn.disabled = true; btn.textContent = 'Sending\u2026';
   var payload = {
     id: lpId(), name: b.fbName, fbName: b.fbName, phone: phone, email: b.email,
     build: b.pkg, total: b.price,
     sizes: { shoe: _lp.shoe },
     gown: lpWantsGown(b.pkg) ? document.getElementById('lp-gown').value.trim() : '',
-    links: document.getElementById('lp-links').value.trim(),
-    notes: 'Sent after booking ' + b.ref + ' \u00B7 session ' + b.date + ' ' + b.slot,
-    images: _lp.photos.map(function (d, i) { return { name: 'look-' + (i + 1) + '.jpg', mime: 'image/jpeg', data: d.replace(/^data:image\/jpeg;base64,/, '') }; })
+    notes: 'Sent after booking ' + b.ref + ' \u00B7 session ' + b.date + ' ' + b.slot + ' \u00B7 look photos come by Messenger'
   };
-  // POST, not the usual JSONP: photos are far too big to fit in a URL
   fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveLookLabInquiry', payload: payload }) })
     .then(function (r) { return r.text(); })
     .then(function (t) {
@@ -1534,7 +1498,7 @@ function submitLookPrep() {
     })
     .catch(function () {
       btn.disabled = false; btn.textContent = 'Send to the Studio';
-      err.textContent = 'We couldn\u2019t send that just now. Please try again, or send your shoes and photos to us on Facebook Messenger.';
+      err.textContent = 'We couldn\u2019t send that just now. Please try again, or tell us your shoes on Facebook Messenger.';
       err.style.display = 'block';
     });
 }
