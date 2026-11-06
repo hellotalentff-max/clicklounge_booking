@@ -682,6 +682,8 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbx_Y5nH34Rq16JJ2AxBDr30tt
 // ── 👗 DRESS RENTALS (House of Roan) ─────────────────────────────────────
 // Paste the dress rental web app URL here (ends in /exec). Blank = the gown step stays hidden.
 var DRESS_API  = 'https://script.google.com/macros/s/AKfycbzPh7QccleUs6m3ipAJvIe1t8FHWPFAPnllb49ErB6y0lcLsZFK6CtsGwAv4TE4hS2jYg/exec';
+// Meta Conversions API relay (a separate Apps Script). Empty = off.
+var CAPI_URL   = 'https://script.google.com/macros/s/AKfycby-ezFqIwM7MNBQ4qda3r5MxeFkiC32ZCpBBUPJ6Ph27EDgdOSQu7vIXORkU5p8bV1Wbw/exec';
 var DRESS_SITE = 'https://hellotalentff-max.github.io/hordr-dresses/';
 // Packages that never get a gown offered. Everything else does.
 var NO_DRESS_PKGS = ['Pose with Serra','Snapshot Selfie','Tribe Time','Crowd Cam','Crew Captures','Frenzy Snaps Birthday',
@@ -691,6 +693,22 @@ var NO_DRESS_PKGS = ['Pose with Serra','Snapshot Selfie','Tribe Time','Crowd Cam
 // createBooking  → creates [PENDING] Google Calendar event (POS reads this)
 // getCalendarEvents { year, month } → returns all events (bookings + blocks)
 // confirmBooking → POS-only, changes event to [CONFIRMED]
+
+// ════════════════════════════════════════════════
+// META CONVERSIONS API — the same event sent from our side, so a blocked browser
+// still counts. Meta drops the duplicate by event ID. Never holds up the booking.
+// ════════════════════════════════════════════════
+function capiCookie(name) { var m = document.cookie.match('(?:^|; )' + name + '=([^;]*)'); return m ? decodeURIComponent(m[1]) : ''; }
+function capiSend(event, id, data) {
+  if (!CAPI_URL) return;
+  try {
+    var src = {};
+    try { src = JSON.parse(localStorage.getItem('cl_src') || '{}'); } catch (e) {}
+    fetch(CAPI_URL, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ event: event, id: id, url: location.origin + location.pathname, ua: navigator.userAgent,
+        fbp: capiCookie('_fbp'), fbc: capiCookie('_fbc'), fbclid: src.fbclid || '' }, data)) }).catch(function(){});
+  } catch (e) {}
+}
 
 // ════════════════════════════════════════════════
 // API — XHR (replaces JSONP — eliminates iOS crash bug)
@@ -1352,7 +1370,7 @@ function submitBooking() {
     if (!payload.dress) dd.innerHTML = '';
     else if (dressRes && dressRes.ok) dd.innerHTML = '<div class="dress-warn" style="background:rgba(81,137,125,.07);border-color:rgba(81,137,125,.3);color:var(--slate);">&#128087; <strong>' + dressEsc(payload.dress) + '</strong> is held for you and will be confirmed together with your booking.</div>';
     else dd.innerHTML = '<div class="dress-warn">&#128087; Sorry — <strong>' + dressEsc(payload.dress) + '</strong> was booked by someone else a moment ago. Your session is still reserved; message us and we\'ll help you choose another gown.</div>';
-    _pp.booking = { ref: ref, fbName: payload.fbName, date: selDate, slot: selSlot, pkg: payload.package };
+    _pp.booking = { ref: ref, fbName: payload.fbName, date: selDate, slot: selSlot, pkg: payload.package, email: payload.email, phone: payload.phone };
     lpShow({ ref: ref, fbName: payload.fbName, phone: payload.phone, email: payload.email, pkg: payload.package, price: payload.price, date: selDate, slot: selSlot });
     document.getElementById('pp-form').style.display = ''; document.getElementById('pp-done').style.display = 'none';
     ppReset();
@@ -1371,6 +1389,7 @@ function submitBooking() {
     }
 
     // ── Fire Meta Pixel events ──
+    var schedId = 'sch-' + ref;
     if (typeof fbq !== 'undefined') {
       // Booking submitted (not paid yet): Schedule, valued at the package price
       fbq('track', 'Schedule', {
@@ -1378,8 +1397,9 @@ function submitBooking() {
         content_category: 'Studio Booking',
         value: parseFloat(payload.price) || 0,
         currency: 'PHP'
-      });
+      }, { eventID: schedId });
     }
+    capiSend('Schedule', schedId, { email: payload.email, phone: payload.phone, pkg: payload.package, value: parseFloat(payload.price) || 0 });
 
     goSc(5);
   }
@@ -1458,7 +1478,8 @@ function submitPaymentProof() {
   }
   if (!(amt > 0)) { err.textContent = 'Please enter the amount you sent.'; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Sending…';
-  if (window.fbq) fbq('track', 'AddPaymentInfo', { content_name: b.pkg, value: amt, currency: 'PHP' });
+  if (window.fbq) fbq('track', 'AddPaymentInfo', { content_name: b.pkg, value: amt, currency: 'PHP' }, { eventID: 'pay-' + b.ref });
+  capiSend('AddPaymentInfo', 'pay-' + b.ref, { email: b.email, phone: b.phone, pkg: b.pkg, value: amt });
   gasCall('submitPaymentProof', {
     bookingId: b.ref, fbName: b.fbName, date: b.date, timeSlot: b.slot, package: b.pkg,
     method: _pp.method, payRef: ref, amount: amt,
